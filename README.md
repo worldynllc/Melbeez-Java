@@ -1,12 +1,13 @@
-# Melbeez-Java
-Melbeez - KKDI Dev team
+# Melbeez - KKDI Dev Team
 
-build
+## Build
+
+```sh
 mvn clean install
 
-run
-Run the RestServiceApplication.java as main
+#Run
+Run the RestServiceApplication.java as main.
 
-Configuration
-Download and install the postgresql db
-update the application.properties file for DB/S3 connections
+#Configuration
+Download and install the PostgreSQL DB.
+Update the application.properties file for DB/S3 connections.
