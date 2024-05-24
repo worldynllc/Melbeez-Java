@@ -1,0 +1,16 @@
+com\mlbeez\feeder\service\MediaStoreService.class
+com\mlbeez\feeder\service\FeedService.class
+com\mlbeez\feeder\RestServiceApplication.class
+com\mlbeez\feeder\service\MediaStoreEnum.class
+com\mlbeez\feeder\service\IMediaStore.class
+com\mlbeez\feeder\service\exception\DataNotFoundException.class
+com\mlbeez\feeder\controller\FeedController.class
+com\mlbeez\feeder\service\exception\ErrorDetails.class
+com\mlbeez\feeder\service\exception\RestTemplateResponseErrorHandler.class
+com\mlbeez\feeder\service\awss3\S3Service.class
+com\mlbeez\feeder\service\awss3\S3Service$2.class
+com\mlbeez\feeder\service\awss3\S3Service$1.class
+com\mlbeez\feeder\model\Feed.class
+com\mlbeez\feeder\controller\FeedMediaController.class
+com\mlbeez\feeder\repository\FeedRepository.class
+com\mlbeez\feeder\controller\WebConfig.class
