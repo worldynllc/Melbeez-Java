@@ -33,12 +33,6 @@ public class FeedMediaControllerTests {
 	@Autowired
 	private MockMvc mockMvc;
 
-	@Test
-	public void noParamGreetingShouldReturnDefaultMessage() throws Exception {
-	}
 
-	@Test
-	public void paramGreetingShouldReturnTailoredMessage() throws Exception {
-	}
 
 }
