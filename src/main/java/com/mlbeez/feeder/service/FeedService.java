@@ -9,6 +9,7 @@ import com.mlbeez.feeder.model.Feed;
 import com.mlbeez.feeder.service.exception.DataNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
@@ -23,8 +24,11 @@ public class FeedService {
 
     @Autowired
     FeedRepository feedRepository;
+    @Value("${test}")
+    private String key;
 
     public List<Feed> getAllFeeds() {
+        System.out.println(key);
         List<Feed> feeds = feedRepository.findAll();
         if (CollectionUtils.isEmpty(feeds)) {
             throw new DataNotFoundException("No feed data in the DataBase","put the data in database");
