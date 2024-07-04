@@ -1,9 +1,10 @@
 package com.mlbeez.feeder.repository;
 
-import com.mlbeez.feeder.model.Warrenty;
+import com.mlbeez.feeder.model.Warranty;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface WarrentyRepository extends JpaRepository<Warrenty,Long> {
+public interface WarrantyRepository extends JpaRepository<Warranty,Long> {
 }

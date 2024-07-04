@@ -8,8 +8,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "warrenty")
-public class Warrenty {
+@Table(name = "warranty")
+public class Warranty {
 
 
     @Id
@@ -18,9 +18,29 @@ public class Warrenty {
     private Long id;
 
     private String vendor;
+
+    private String warrantyId;
     private String productName;
     private Float monthlyPrice;
     private Float annualPrice;
+
+    public String getWarrantyId() {
+        return warrantyId;
+    }
+
+    public void setWarrantyId(String warrantyId) {
+        this.warrantyId = warrantyId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    private String status;
 
 //    private String img;
 //
