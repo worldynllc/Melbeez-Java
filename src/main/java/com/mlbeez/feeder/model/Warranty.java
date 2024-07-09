@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Random;
 
 @Entity
 @Table(name = "warranty")
@@ -23,6 +24,19 @@ public class Warranty {
     private String productName;
     private Float monthlyPrice;
     private Float annualPrice;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.warrantyId == null) {
+            this.warrantyId = generateWarrantyId();
+        }
+    }
+
+    private String generateWarrantyId() {
+        Random random = new Random();
+        int number = random.nextInt(90000000) + 10000000; // Generate a random 8-digit number
+        return String.valueOf(number);
+    }
 
     public String getWarrantyId() {
         return warrantyId;
