@@ -6,7 +6,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.Random;
+
+import java.util.UUID;
 
 @Entity
 @Table(name = "warranty")
@@ -31,17 +32,13 @@ public class Warranty {
             this.warrantyId = generateWarrantyId();
         }
     }
-
     private String generateWarrantyId() {
-        Random random = new Random();
-        int number = random.nextInt(90000000) + 10000000; // Generate a random 8-digit number
-        return String.valueOf(number);
+        String uuid = UUID.randomUUID().toString().replaceAll("[^0-9]", "");
+        return uuid.length() >= 8 ? uuid.substring(0, 8) : String.format("%08d", Integer.parseInt(uuid));
     }
-
     public String getWarrantyId() {
         return warrantyId;
     }
-
     public void setWarrantyId(String warrantyId) {
         this.warrantyId = warrantyId;
     }
