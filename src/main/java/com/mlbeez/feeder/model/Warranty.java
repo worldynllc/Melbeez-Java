@@ -6,7 +6,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-
 import java.util.UUID;
 
 @Entity
@@ -22,9 +21,13 @@ public class Warranty {
     private String vendor;
 
     private String warrantyId;
-    private String productName;
+    private String name;
     private Float monthlyPrice;
     private Float annualPrice;
+
+    private String planName;
+
+    private String planDescription;
 
     @PrePersist
     public void prePersist() {
@@ -32,13 +35,16 @@ public class Warranty {
             this.warrantyId = generateWarrantyId();
         }
     }
+
     private String generateWarrantyId() {
         String uuid = UUID.randomUUID().toString().replaceAll("[^0-9]", "");
         return uuid.length() >= 8 ? uuid.substring(0, 8) : String.format("%08d", Integer.parseInt(uuid));
     }
+
     public String getWarrantyId() {
         return warrantyId;
     }
+
     public void setWarrantyId(String warrantyId) {
         this.warrantyId = warrantyId;
     }
@@ -51,11 +57,12 @@ public class Warranty {
         this.status = status;
     }
 
-    private String status;
 
-//    private String img;
-//
-//    private String img_Link;
+    private String status = "Pending";
+
+    private String picture;
+
+    private String pictureLink;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
@@ -64,22 +71,45 @@ public class Warranty {
         return updatedAt;
     }
 
+    public String getPlanName() {
+        return planName;
+    }
+
+    public void setPlanName(String planName) {
+        this.planName = planName;
+    }
+
+    public String getPlanDescription() {
+        return planDescription;
+    }
+
+    public void setPlanDescription(String planDescription) {
+        this.planDescription = planDescription;
+    }
+
+    public String getPictureName() {
+        return pictureName;
+    }
+
+    public void setPictureName(String pictureName) {
+        this.pictureName = pictureName;
+    }
+
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
-//    public String getImg_Link() {
-//        return img_Link;
-//    }
-//
-//    public void setImg_Link(String img_Link) {
-//        this.img_Link = img_Link;
-//    }
+    public String getPictureLink() {
+        return pictureLink;
+    }
+
+    public void setPictureLink(String pictureLink) {
+        this.pictureLink = pictureLink;
+    }
 
     private int discount;
-//    private String picture;
+    private String pictureName;
 
-    private String terms_conditions;
 
     private String created_by;
 
@@ -89,13 +119,13 @@ public class Warranty {
     private LocalDateTime createdAt;
 
 
-//    public String getImg() {
-//        return img;
-//    }
-//
-//    public void setImg(String img) {
-//        this.img = img;
-//    }
+    public String getPicture() {
+        return picture;
+    }
+
+    public void setPicture(String picture) {
+        this.picture = picture;
+    }
 
     public Long getId() {
         return id;
@@ -113,12 +143,12 @@ public class Warranty {
         this.vendor = vendor;
     }
 
-    public String getProductName() {
-        return productName;
+    public String getName() {
+        return name;
     }
 
-    public void setProductName(String productName) {
-        this.productName = productName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public Float getMonthlyPrice() {
@@ -145,21 +175,6 @@ public class Warranty {
         this.discount = discount;
     }
 
-//    public String getPicture() {
-//        return picture;
-//    }
-//
-//    public void setPicture(String picture) {
-//        this.picture = picture;
-//    }
-
-    public String getTerms_conditions() {
-        return terms_conditions;
-    }
-
-    public void setTerms_conditions(String terms_conditions) {
-        this.terms_conditions = terms_conditions;
-    }
 
     public String getCreated_by() {
         return created_by;

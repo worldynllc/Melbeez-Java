@@ -6,7 +6,7 @@ import com.mlbeez.feeder.service.FeedService;
 import com.mlbeez.feeder.service.MediaStoreService;
 import com.mlbeez.feeder.service.awss3.S3Service;
 
-import com.mlbeez.feeder.service.exception.RestTemplateResponseErrorHandler;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.http.ResponseEntity;
@@ -32,8 +32,6 @@ public class FeedController {
     @Autowired
     FeedRepository feedRepository;
 
-    @Autowired
-    RestTemplateResponseErrorHandler restTemplateResponseErrorHandler;
 
     public FeedController(FeedService feedService) {
         this.feedService = feedService;
@@ -52,9 +50,9 @@ public class FeedController {
                 service.getMediaStoreService().deleteFile(feed.getImg());
             }
             feedService.deleteFeedId(id);
-            return ResponseEntity.ok().build(); 
+            return ResponseEntity.ok().build();
         } else {
-            return ResponseEntity.notFound().build(); 
+            return ResponseEntity.notFound().build();
         }
     }
 
@@ -77,8 +75,6 @@ public class FeedController {
 //
 //		return Services.getAllImageFileKeys();
 //	}
-
-
 
 
 }
