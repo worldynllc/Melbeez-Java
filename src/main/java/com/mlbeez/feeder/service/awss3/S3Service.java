@@ -12,7 +12,7 @@ import software.amazon.awssdk.core.waiters.WaiterResponse;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.waiters.S3Waiter;
-import java.util.UUID;
+
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,8 +70,7 @@ public class S3Service implements IMediaStore {
 										.key(filename)
 										.acl("public-read")
 										.build();
-		client.putObject(request,
-				RequestBody.fromInputStream(inputStream, inputStream.available()));
+		client.putObject(request, RequestBody.fromInputStream(inputStream, inputStream.available()));
 		S3Waiter waiter = client.waiter();
 		HeadObjectRequest waitRequest = HeadObjectRequest.builder()
 											.bucket(bucket)
