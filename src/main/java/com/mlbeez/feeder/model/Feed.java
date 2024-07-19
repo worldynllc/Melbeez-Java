@@ -23,7 +23,7 @@ public class Feed extends RepresentationModel<Feed> {
     private String link;
 
 
-    	private String author;
+    private String author;
     private String description;
 
 
@@ -76,15 +76,13 @@ public class Feed extends RepresentationModel<Feed> {
     }
 
 
-	public String getAuthor() {
-		return author;
-	}
+    public String getAuthor() {
+        return author;
+    }
 
-	public void setAuthor(String author) {
-		this.author = author;
-	}
-
-
+    public void setAuthor(String author) {
+        this.author = author;
+    }
 
 
 //	public String getCategory() {
