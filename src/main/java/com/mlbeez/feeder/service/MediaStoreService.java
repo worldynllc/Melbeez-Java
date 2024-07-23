@@ -13,17 +13,12 @@ public class MediaStoreService {
 
     @Autowired
     ApplicationContext context;
-    
-   
 
     @Value("${media.store}")
     String mediaStore;
-   
+
     public IMediaStore getMediaStoreService() {
         return (IMediaStore)context.getBean(Optional.ofNullable(MediaStoreEnum.getStore(mediaStore)).orElseThrow().getName());
     }
-
-
-
 
 }
