@@ -4,15 +4,13 @@ package com.mlbeez.feeder.model;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
+import org.springframework.hateoas.RepresentationModel;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "warranty")
-public class Warranty {
-
-
+public class Warranty extends RepresentationModel<Feed> {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO) // Use GenerationType.IDENTITY for auto-generated IDs
     @Column(columnDefinition = "bigint")

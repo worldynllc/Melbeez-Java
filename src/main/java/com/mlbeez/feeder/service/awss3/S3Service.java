@@ -12,8 +12,6 @@ import software.amazon.awssdk.core.waiters.WaiterResponse;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.waiters.S3Waiter;
-
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicReference;
@@ -83,41 +81,6 @@ public class S3Service implements IMediaStore {
 		});
 		return url.get();
 	}
-	
-	
-	
-	
-	//Get all the images from S3
-	public List<String> getAllImageFileKeys() {
-	    S3Client client = S3Client.builder().credentialsProvider(getCredentialsProvider()).build();
-	    ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
-	                .bucket(bucket)
-	                .build();
-
-	        List<String> imageKeys = new ArrayList<>();
-
-	        ListObjectsV2Response listResponse;
-	        do {
-	            listResponse = client.listObjectsV2(listRequest);
-	            listResponse.contents().forEach(object -> {
-	                // Add the key to the list if it's an image file
-	                if (object.key().toLowerCase().endsWith(".jpeg") ||
-	                    object.key().toLowerCase().endsWith(".jpg") ||
-	                    object.key().toLowerCase().endsWith(".png")) {
-	                    imageKeys.add(object.key());
-	                }
-	            });
-	            listRequest = ListObjectsV2Request.builder()
-	                    .bucket(bucket)
-	                    .continuationToken(listResponse.nextContinuationToken())
-	                    .build();
-	        } while (listResponse.isTruncated());
-
-	        return imageKeys;
-	    }
-
-	   
-	
 
 	@Override
 	public String getFileLocation(String filename) {
@@ -130,6 +93,35 @@ public class S3Service implements IMediaStore {
 		S3Client client = S3Client.builder().credentialsProvider(getCredentialsProvider()).build();
 		DeleteObjectResponse deleteObjectResponse = client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(filename).build());
 		return true;
+	}
+
+	@Override
+	public List<String> getAllImageFileKeys() {
+
+		S3Client client = S3Client.builder().credentialsProvider(getCredentialsProvider()).build();
+		ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
+				.bucket(bucket)
+				.build();
+
+		List<String> imageKeys = new ArrayList<>();
+
+		ListObjectsV2Response listResponse;
+		do {
+			listResponse = client.listObjectsV2(listRequest);
+			listResponse.contents().forEach(object -> {
+				// Add the key to the list if it's an image file
+				if (object.key().toLowerCase().endsWith(".jpeg") || object.key().toLowerCase().endsWith(".jpg") || object.key().toLowerCase().endsWith(".png"))
+				{
+					imageKeys.add(object.key());
+				}
+			});
+			listRequest = ListObjectsV2Request.builder()
+					.bucket(bucket)
+					.continuationToken(listResponse.nextContinuationToken())
+					.build();
+		} while (listResponse.isTruncated());
+
+		return imageKeys;
 	}
 
 }
