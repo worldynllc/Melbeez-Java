@@ -59,9 +59,9 @@ public class WarrantyController {
     }
 
     @PutMapping("warranty/{id}")
-    public ResponseEntity<Warranty> updateWarranty(@PathVariable Long id, @ModelAttribute UpdateWarrantyRequest request,@RequestParam("file") MultipartFile multipart) {
-        logger.debug("Request to Update Warranty {}", request);
-        Optional<Warranty> result = warrantyService.updateWarranty(id, request,multipart);
+    public ResponseEntity<Warranty> updateWarranty(@PathVariable Long id, @RequestBody UpdateWarrantyRequest request) {
+        logger.debug("Request to Update Warranty {}",request);
+        Optional<Warranty> result = warrantyService.updateWarranty(id, request);
         return result.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

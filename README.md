@@ -5,9 +5,10 @@
 ```sh
 mvn clean install
 ```
+## Configuration
+All the configuration now comes from ConfigService, runt he ConfigService first and run the application
+
 ## Run
 Run the RestServiceApplication.java as main.
 
-## Configuration
-Download and install the PostgreSQL DB.
-Update the application.properties file for DB/S3 connections.
+
