@@ -63,6 +63,7 @@ public class FeedService {
 
     public List<Feed> getAllFeeds() {
         List<Feed> feeds = feedRepository.findAll();
+
         if (CollectionUtils.isEmpty(feeds)) {
             throw new DataNotFoundException("No feed data in the DataBase", "put the data in database");
         }

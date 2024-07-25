@@ -30,8 +30,8 @@ public class WarrantyController {
     private static final Logger logger = LoggerFactory.getLogger(WarrantyController.class);
 
     @Operation(summary = "Upload a new warranty")
-    @PostMapping("/upload")
-    public ResponseEntity<String> warrantyUpload(@ModelAttribute Warranty warranty, @RequestParam("file") MultipartFile multipart) {
+    @PostMapping(value = "/upload", consumes = {"multipart/form-data"})
+    public ResponseEntity<String> warrantyUpload(Warranty warranty, @RequestPart("file") MultipartFile multipart) {
         logger.debug("Request to Upload Warranty {}", warranty);
         return warrantyService.createWarranty(warranty, multipart);
     }

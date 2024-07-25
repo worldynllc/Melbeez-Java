@@ -4,6 +4,9 @@ import com.mlbeez.feeder.model.Feed;
 import com.mlbeez.feeder.repository.FeedRepository;
 import com.mlbeez.feeder.service.FeedService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,11 +34,12 @@ public class FeedMediaController {
     }
 
     @Operation(summary = "Upload a new Feed")
-    @PostMapping("/upload")
-    public ResponseEntity<String> handleUpload(Model model,@ModelAttribute Feed feed, @RequestParam("file") MultipartFile multipart) {
-        logger.debug("Request to Upload Feed {}",feed);
-        return feedService.createFeed(feed,multipart);
-
+    @PostMapping(value = "/upload", consumes = {"multipart/form-data"})
+    public ResponseEntity<String> handleUpload(Feed feed, @RequestPart("file")MultipartFile file) {
+        logger.debug("Request to Upload Feed {}", feed);
+        return feedService.createFeed(feed, file);
     }
+
+
 
 }
