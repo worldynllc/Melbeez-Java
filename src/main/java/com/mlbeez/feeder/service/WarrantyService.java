@@ -94,7 +94,7 @@ public class WarrantyService {
         return warrantyRepository.findByStatus("Pending");
     }
 
-    public Optional<Warranty> updateWarranty(Long id, UpdateWarrantyRequest request, MultipartFile multipart) {
+    public Optional<Warranty> updateWarranty(Long id, UpdateWarrantyRequest request) {
         return warrantyRepository.findById(id)
                 .map(existingWarranty -> {
                     if (request.getVendor() != null) existingWarranty.setVendor(request.getVendor());
@@ -103,8 +103,9 @@ public class WarrantyService {
                     if (request.getMonthlyPrice() != null) existingWarranty.setMonthlyPrice(request.getMonthlyPrice());
                     if (request.getAnnualPrice() != null) existingWarranty.setAnnualPrice(request.getAnnualPrice());
                     if (request.getDiscount() != null) existingWarranty.setDiscount(request.getDiscount());
-                    if (request.getPlanName() != null) existingWarranty.setPlanName(request.getPlanName());
-                    if (request.getPlanDescription() != null) existingWarranty.setPlanDescription(request.getPlanDescription());
+                    if (request.getPlanName()!=null) existingWarranty.setPlanName(request.getPlanName());
+                    if (request.getPlanDescription()!=null) existingWarranty.setPlanDescription(request.getPlanDescription());
+//                if (request.getCreatedBy() != null) existingWarranty.setCreated_by(request.getCreatedBy());
                     if (request.getUpdated_by() != null) existingWarranty.setUpdated_by(request.getUpdated_by());
                     if (request.getStatus() != null) existingWarranty.setStatus((request.getStatus()));
                     return warrantyRepository.save(existingWarranty);

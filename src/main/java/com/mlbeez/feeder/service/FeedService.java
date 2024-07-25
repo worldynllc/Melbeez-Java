@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 import com.mlbeez.feeder.controller.FeedController;
 import com.mlbeez.feeder.model.Feed;
+import com.mlbeez.feeder.service.exception.DataNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.Link;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import com.mlbeez.feeder.repository.FeedRepository;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 
@@ -61,6 +63,10 @@ public class FeedService {
 
     public List<Feed> getAllFeeds() {
         List<Feed> feeds = feedRepository.findAll();
+
+        if (CollectionUtils.isEmpty(feeds)) {
+            throw new DataNotFoundException("No feed data in the DataBase", "put the data in database");
+        }
         for (Feed feed : feeds) {
             Link selfLink = WebMvcLinkBuilder.linkTo(FeedController.class).withSelfRel();
             feed.add(selfLink);
