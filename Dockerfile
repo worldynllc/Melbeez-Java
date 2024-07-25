@@ -2,7 +2,7 @@
 FROM openjdk:17-alpine
 # Set the working directory in the container
 WORKDIR /app
-
+RUN mvn clean install
 # Copy the application JAR file
 COPY target/feeder-0.0.1-SNAPSHOT.jar app.jar
 # Expose the port that the application runs on
