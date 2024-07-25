@@ -1,6 +1,7 @@
 package com.mlbeez.feeder.model;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -63,6 +64,7 @@ public class Warranty extends RepresentationModel<Feed> {
     private String pictureLink;
 
     @UpdateTimestamp
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 
     public LocalDateTime getUpdatedAt() {
@@ -114,6 +116,7 @@ public class Warranty extends RepresentationModel<Feed> {
     private String updated_by;
 
     @CreationTimestamp
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
 

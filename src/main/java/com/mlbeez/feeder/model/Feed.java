@@ -1,5 +1,6 @@
 package com.mlbeez.feeder.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.time.LocalDateTime;
@@ -33,6 +34,7 @@ public class Feed extends RepresentationModel<Feed> {
 
     @CreationTimestamp
     @Column(name = "created_at")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
     public LocalDateTime getCreatedAt() {

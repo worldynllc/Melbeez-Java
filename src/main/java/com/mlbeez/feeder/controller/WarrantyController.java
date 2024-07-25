@@ -4,6 +4,8 @@ import com.mlbeez.feeder.model.UpdateWarrantyRequest;
 import com.mlbeez.feeder.model.Warranty;
 import com.mlbeez.feeder.repository.WarrantyRepository;
 import com.mlbeez.feeder.service.WarrantyService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,8 @@ import java.util.Optional;
 
 
 @RestController
+@RequestMapping("/warranty")
+@Tag(name = "Warranty", description = "Manage warranties")
 public class WarrantyController {
     @Autowired
     private WarrantyService warrantyService;
@@ -25,13 +29,15 @@ public class WarrantyController {
 
     private static final Logger logger = LoggerFactory.getLogger(WarrantyController.class);
 
-    @PostMapping("warranty/upload")
+    @Operation(summary = "Upload a new warranty")
+    @PostMapping("/upload")
     public ResponseEntity<String> warrantyUpload(@ModelAttribute Warranty warranty, @RequestParam("file") MultipartFile multipart) {
         logger.debug("Request to Upload Warranty {}", warranty);
         return warrantyService.createWarranty(warranty, multipart);
     }
 
-    @DeleteMapping("warranty/{id}")
+    @Operation(summary = "Delete a warranty by ID")
+    @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteWarrantyById(@PathVariable("id") Long id) {
         logger.debug("Request to Delete Warranty {}", id);
         warrantyService.deleteWarrantyById(id);
@@ -39,26 +45,30 @@ public class WarrantyController {
 
     }
 
-    @GetMapping("/warranty/pending")
+    @Operation(summary = "Get all pending warranties")
+    @GetMapping("/pending")
     public List<Warranty> getPending() {
         logger.debug("Request to GetAll Pending Warranty");
         return warrantyService.getPendingWarranties();
     }
 
-    @GetMapping("warranty/all")
+    @Operation(summary = "Get all warranties")
+    @GetMapping("/all")
     public List<Warranty> getWarrantyAll() {
         logger.debug("Request to GetAll Warranty");
         return warrantyService.getWarranty();
     }
 
-    @GetMapping("/warranty/{id}")
+    @Operation(summary = "Get warranty by ID")
+    @GetMapping("/{id}")
     public ResponseEntity<Optional<Warranty>> getWarrantyId(@PathVariable("id") Long id) {
         logger.debug("Request to Get Warranty by Id");
         Optional<Warranty> warranty = warrantyService.getWarrantyById(id);
         return ResponseEntity.ok().body(warranty);
     }
 
-    @PutMapping("warranty/{id}")
+    @Operation(summary = "Update a warranty by ID")
+    @PutMapping("/{id}")
     public ResponseEntity<Warranty> updateWarranty(@PathVariable Long id, @RequestBody UpdateWarrantyRequest request) {
         logger.debug("Request to Update Warranty {}",request);
         Optional<Warranty> result = warrantyService.updateWarranty(id, request);
