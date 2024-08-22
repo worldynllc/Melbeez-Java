@@ -118,8 +118,8 @@ public class StripeController {
             SessionCreateParams sessionParams = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
                     .setCustomer(user.getCustomerId())
-                    .setSuccessUrl("http://localhost:8085/success")
-                    .setCancelUrl("http://localhost:8085/cancel")
+                    .setSuccessUrl("https://preprodjavaapi.melbeez.com/success")
+                    .setCancelUrl("https://preprodjavaapi.melbeez.com/cancel")
                     .addLineItem(
                             SessionCreateParams.LineItem.builder()
                                     .setQuantity(1L)
