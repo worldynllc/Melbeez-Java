@@ -16,6 +16,5 @@ public class UpdateWarrantyRequest {
     private Integer discount;
     private String planName;
     private String planDescription;
-//    private String created_By;
     private String updated_by;
 }

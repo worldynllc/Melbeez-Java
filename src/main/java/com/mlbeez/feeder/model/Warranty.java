@@ -19,10 +19,21 @@ public class Warranty extends RepresentationModel<Feed> {
 
     private String vendor;
 
+    @Column(unique = true)
     private String warrantyId;
     private String name;
-    private Float monthlyPrice;
+    private String monthlyPrice;
     private Float annualPrice;
+
+    private String productId;
+
+    public String getProductId() {
+        return productId;
+    }
+
+    public void setProductId(String productId) {
+        this.productId = productId;
+    }
 
     private String planName;
 
@@ -107,7 +118,7 @@ public class Warranty extends RepresentationModel<Feed> {
         this.pictureLink = pictureLink;
     }
 
-    private int discount;
+    private String discount;
     private String pictureName;
 
 
@@ -152,11 +163,11 @@ public class Warranty extends RepresentationModel<Feed> {
         this.name = name;
     }
 
-    public Float getMonthlyPrice() {
+    public String getMonthlyPrice() {
         return monthlyPrice;
     }
 
-    public void setMonthlyPrice(Float monthlyPrice) {
+    public void setMonthlyPrice(String monthlyPrice) {
         this.monthlyPrice = monthlyPrice;
     }
 
@@ -168,11 +179,11 @@ public class Warranty extends RepresentationModel<Feed> {
         this.annualPrice = annualPrice;
     }
 
-    public int getDiscount() {
+    public String getDiscount() {
         return discount;
     }
 
-    public void setDiscount(int discount) {
+    public void setDiscount(String discount) {
         this.discount = discount;
     }
 

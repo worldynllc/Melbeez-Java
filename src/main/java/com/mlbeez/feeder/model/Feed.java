@@ -2,9 +2,7 @@ package com.mlbeez.feeder.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-
 import java.time.LocalDateTime;
-
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.hateoas.RepresentationModel;
@@ -19,7 +17,6 @@ public class Feed extends RepresentationModel<Feed> {
     private Long id;
 
 //	private String title;
-
     @JsonInclude(JsonInclude.Include.ALWAYS)
     private String link;
 
