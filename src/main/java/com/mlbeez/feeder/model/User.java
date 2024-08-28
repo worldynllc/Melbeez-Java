@@ -19,6 +19,15 @@ public class User {
 
     private String customerId;
 
+    private String firstName;
+
+    private String lastName;
+    private String cityName;
+
+    private String stateName;
+    private String zipCode;
+
+    private String addressLine1;
     private String phoneNumber;
 
     private String email;

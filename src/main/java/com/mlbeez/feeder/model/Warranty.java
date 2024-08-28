@@ -2,20 +2,42 @@ package com.mlbeez.feeder.model;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.mlbeez.feeder.converted.StringListConverter;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.hateoas.RepresentationModel;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Table(name = "warranty")
 public class Warranty extends RepresentationModel<Feed> {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO) // Use GenerationType.IDENTITY for auto-generated IDs
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(columnDefinition = "bigint")
     private Long id;
+
+    private String product_price_ids;
+
+    public String getProduct_price_ids() {
+        return product_price_ids;
+    }
+
+    public void setProduct_price_ids(String product_price_ids) {
+        this.product_price_ids = product_price_ids;
+    }
+
+    public String getOther_Details() {
+        return other_Details;
+    }
+
+    public void setOther_Details(String other_Details) {
+        this.other_Details = other_Details;
+    }
+
+    private String other_Details;
 
     private String vendor;
 

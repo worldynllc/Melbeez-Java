@@ -4,6 +4,8 @@ package com.mlbeez.feeder.model;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 public class UpdateWarrantyRequest {
@@ -15,6 +17,8 @@ public class UpdateWarrantyRequest {
     private Float annualPrice;
     private Integer discount;
     private String planName;
+    private String product_price_ids;
+    private String other_Details;
     private String planDescription;
     private String updated_by;
 }

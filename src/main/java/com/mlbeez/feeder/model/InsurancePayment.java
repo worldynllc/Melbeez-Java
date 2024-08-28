@@ -40,6 +40,8 @@ public class InsurancePayment {
 
     private String phoneNumber;
 
+    private String warrantyId;
+
     private String mode;
 
     private String default_payment_method;

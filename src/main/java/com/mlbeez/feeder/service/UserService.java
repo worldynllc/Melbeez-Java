@@ -21,7 +21,8 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User getOrCreateUser(String userId, String userName, String email, String phoneNumber) throws StripeException {
+    public User getOrCreateUser(String userId, String userName, String email, String phoneNumber,String firstName,
+                                String lastName,String cityName,String stateName,String zipCode,String addressLine1) throws StripeException {
         Optional<User> userDetail = userRepository.findByUserId(userId);
         User user;
 
@@ -52,6 +53,12 @@ public class UserService {
             user.setUserId(userId);
             user.setCustomerId(customer.getId());
             user.setUserName(userName);
+            user.setFirstName(firstName);
+            user.setLastName(lastName);
+            user.setCityName(cityName);
+            user.setStateName(stateName);
+            user.setZipCode(zipCode);
+            user.setAddressLine1(addressLine1);
             user.setPhoneNumber(phoneNumber);
             user.setEmail(email);
 

@@ -1,9 +1,11 @@
 package com.mlbeez.feeder.service;
 
-import com.mlbeez.feeder.controller.FeedController;
 import com.mlbeez.feeder.controller.WarrantyController;
+
 import com.mlbeez.feeder.model.UpdateWarrantyRequest;
 import com.mlbeez.feeder.model.Warranty;
+
+
 import com.mlbeez.feeder.repository.WarrantyRepository;
 import com.mlbeez.feeder.service.exception.WarrantyNotFoundException;
 import com.stripe.exception.StripeException;
@@ -20,12 +22,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
+
 @Service
 public class WarrantyService {
 
     @Autowired
-    private WarrantyRepository warrantyRepository;
-
+   private WarrantyRepository warrantyRepository;
 
 
     @Autowired
@@ -109,7 +111,7 @@ public class WarrantyService {
             Link selfLink = WebMvcLinkBuilder.linkTo(WarrantyController.class).withSelfRel();
             warranty1.add(selfLink);
         }
-        Link link = WebMvcLinkBuilder.linkTo(FeedController.class).withSelfRel();
+        Link link = WebMvcLinkBuilder.linkTo(WarrantyController.class).withSelfRel();
         CollectionModel<Warranty> result = CollectionModel.of(warranty, link);
         return warranty;
     }
@@ -130,6 +132,8 @@ public class WarrantyService {
                     if (request.getPlanName()!=null) existingWarranty.setPlanName(request.getPlanName());
                     if (request.getPlanDescription()!=null) existingWarranty.setPlanDescription(request.getPlanDescription());
                     if (request.getUpdated_by() != null) existingWarranty.setUpdated_by(request.getUpdated_by());
+                    if (request.getProduct_price_ids() != null) existingWarranty.setProduct_price_ids(request.getProduct_price_ids());
+                    if (request.getOther_Details() != null) existingWarranty.setOther_Details(request.getOther_Details());
                     if (request.getStatus() != null) existingWarranty.setStatus((request.getStatus()));
                     return warrantyRepository.save(existingWarranty);
                 })

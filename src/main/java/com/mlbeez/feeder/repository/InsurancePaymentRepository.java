@@ -6,8 +6,12 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 
+
 @Repository
 public interface InsurancePaymentRepository extends JpaRepository<InsurancePayment,Long> {
+
+    
     InsurancePayment findByCustomer(String customer);
     List<InsurancePayment> findAllByProductId(String productId);
+
 }

@@ -51,10 +51,12 @@ public class WarrantyController {
 
     @Operation(summary = "Get all warranties")
     @GetMapping("/all")
-    public List<Warranty> getWarrantyAll() {
+    public List<Warranty> getWarrantyAll( ) {
         logger.debug("Request to GetAll Warranty");
         return warrantyService.getWarranty();
     }
+
+
 
     @Operation(summary = "Get warranty by ID")
     @GetMapping("/{id}")
