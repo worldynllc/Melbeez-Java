@@ -21,6 +21,10 @@ public class InsurancePaymentService {
         return insurancePaymentRepository.save(insurancePayment);
     }
 
+    public List<InsurancePayment> getByUser(String userId) {
+        return insurancePaymentRepository.findByUserId(userId);
+    }
+
     public InsurancePayment updatePayment(InsurancePayment updatedPayment) {
         // Retrieve the existing payment by customer
         InsurancePayment existingPayment = insurancePaymentRepository.findByCustomer(updatedPayment.getCustomer());

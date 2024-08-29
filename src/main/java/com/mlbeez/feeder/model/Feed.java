@@ -11,7 +11,7 @@ import org.springframework.hateoas.RepresentationModel;
 @Table(name = "feeds")
 public class Feed extends RepresentationModel<Feed> {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO) // Use GenerationType.IDENTITY for auto-generated IDs
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(columnDefinition = "bigint")
 
     private Long id;

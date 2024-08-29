@@ -58,7 +58,7 @@ public class CheckoutService {
 
         String idempotencyKey = userId + "_" + System.currentTimeMillis();
 
-        // Retrieve or create user
+        // Retrieve or create user and customer
         User user = userService.getOrCreateUser(userId, userName, email, phoneNumber,firstName,lastName,cityName,
                 stateName,zipCode,addressLine1);
 

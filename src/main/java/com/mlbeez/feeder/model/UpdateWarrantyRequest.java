@@ -4,7 +4,7 @@ package com.mlbeez.feeder.model;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
+
 
 @Getter
 @Setter

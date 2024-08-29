@@ -14,4 +14,5 @@ public interface InsurancePaymentRepository extends JpaRepository<InsurancePayme
     InsurancePayment findByCustomer(String customer);
     List<InsurancePayment> findAllByProductId(String productId);
 
+    List<InsurancePayment>  findByUserId(String userId);
 }

@@ -2,13 +2,12 @@ package com.mlbeez.feeder.model;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.mlbeez.feeder.converted.StringListConverter;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.hateoas.RepresentationModel;
 import java.time.LocalDateTime;
-import java.util.List;
+
 import java.util.UUID;
 
 @Entity

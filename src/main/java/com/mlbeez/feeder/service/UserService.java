@@ -16,11 +16,6 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public User storeUser(User user)
-    {
-        return userRepository.save(user);
-    }
-
     public User getOrCreateUser(String userId, String userName, String email, String phoneNumber,String firstName,
                                 String lastName,String cityName,String stateName,String zipCode,String addressLine1) throws StripeException {
         Optional<User> userDetail = userRepository.findByUserId(userId);
@@ -28,30 +23,20 @@ public class UserService {
 
         if (userDetail.isPresent()) {
             user = userDetail.get();
-            if (user.getCustomerId() == null) {
-                // Create Stripe customer
-                CustomerCreateParams customerParams = CustomerCreateParams.builder()
-                        .setName(userName)
-                        .setEmail(email)
-                        .build();
-                Customer customer = Customer.create(customerParams);
-
-                // Save Stripe customerId to user
-                user.setCustomerId(customer.getId());
+            if (user.getCustomerId() == null || user.getCustomerId().isEmpty()) {
+                // Create Stripe customer and save customerId to user
+                String customerId = createStripeCustomer(userName, email);
+                user.setCustomerId(customerId);
                 userRepository.save(user);
             }
         } else {
             // Create a new Stripe customer
-            CustomerCreateParams customerParams = CustomerCreateParams.builder()
-                    .setName(userName)
-                    .setEmail(email)
-                    .build();
-            Customer customer = Customer.create(customerParams);
+           String customerId= createStripeCustomer(userName,email);
 
             // Create a new user in the system
             user = new User();
             user.setUserId(userId);
-            user.setCustomerId(customer.getId());
+            user.setCustomerId(customerId);
             user.setUserName(userName);
             user.setFirstName(firstName);
             user.setLastName(lastName);
@@ -67,6 +52,13 @@ public class UserService {
 
         return user;
     }
-
-
+    private String createStripeCustomer(String userName, String email) throws StripeException {
+        // Create Stripe customer
+        CustomerCreateParams customerParams = CustomerCreateParams.builder()
+                .setName(userName)
+                .setEmail(email)
+                .build();
+        Customer customer = Customer.create(customerParams);
+        return customer.getId();
+    }
 }

@@ -3,17 +3,12 @@ package com.mlbeez.feeder.controller;
 import com.mlbeez.feeder.model.InsurancePayment;
 
 import com.mlbeez.feeder.repository.InsurancePaymentRepository;
-import com.mlbeez.feeder.repository.WarrantyRepository;
 import com.mlbeez.feeder.service.CheckoutService;
 import com.mlbeez.feeder.service.InsurancePaymentService;
-import com.mlbeez.feeder.service.UserService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Subscription;
 import com.stripe.param.SubscriptionCancelParams;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,25 +19,16 @@ import java.util.Map;
 
 @RestController
 public class StripeController {
-    @Value("${stripe.api.key}")
-    private String stripeApiKey;
 
     @Autowired
     private InsurancePaymentRepository insurancePaymentRepository;
 
     @Autowired
-    private UserService userService;
-
-    @Autowired
     CheckoutService checkoutService;
-
-    @Autowired
-    private WarrantyRepository warrantyRepository;
 
     @Autowired
     InsurancePaymentService insurancePaymentService;
 
-    private static final Logger logger = LoggerFactory.getLogger(StripeController.class);
 
     @PostMapping("/create-checkout-session")
     public Map<String, String> createCheckoutSession(@RequestBody Map<String, String> Details) {
