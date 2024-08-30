@@ -2,8 +2,8 @@ package com.mlbeez.feeder.controller;
 
 import com.mlbeez.feeder.model.UpdateWarrantyRequest;
 import com.mlbeez.feeder.model.Warranty;
-import com.mlbeez.feeder.repository.WarrantyRepository;
 import com.mlbeez.feeder.service.WarrantyService;
+import com.stripe.exception.StripeException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -24,14 +24,11 @@ public class WarrantyController {
     @Autowired
     private WarrantyService warrantyService;
 
-    @Autowired
-    private WarrantyRepository warrantyRepository;
-
     private static final Logger logger = LoggerFactory.getLogger(WarrantyController.class);
 
     @Operation(summary = "Upload a new warranty")
     @PostMapping(value = "/upload", consumes = {"multipart/form-data"})
-    public ResponseEntity<String> warrantyUpload(Warranty warranty, @RequestPart("file") MultipartFile multipart) {
+    public ResponseEntity<String> warrantyUpload(Warranty warranty, @RequestPart("file") MultipartFile multipart)throws StripeException {
         logger.debug("Request to Upload Warranty {}", warranty);
         return warrantyService.createWarranty(warranty, multipart);
     }
@@ -54,10 +51,12 @@ public class WarrantyController {
 
     @Operation(summary = "Get all warranties")
     @GetMapping("/all")
-    public List<Warranty> getWarrantyAll() {
+    public List<Warranty> getWarrantyAll( ) {
         logger.debug("Request to GetAll Warranty");
         return warrantyService.getWarranty();
     }
+
+
 
     @Operation(summary = "Get warranty by ID")
     @GetMapping("/{id}")
@@ -75,6 +74,5 @@ public class WarrantyController {
         return result.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-
 
 }

@@ -2,9 +2,7 @@ package com.mlbeez.feeder.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-
 import java.time.LocalDateTime;
-
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.hateoas.RepresentationModel;
@@ -13,13 +11,12 @@ import org.springframework.hateoas.RepresentationModel;
 @Table(name = "feeds")
 public class Feed extends RepresentationModel<Feed> {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO) // Use GenerationType.IDENTITY for auto-generated IDs
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(columnDefinition = "bigint")
 
     private Long id;
 
 //	private String title;
-
     @JsonInclude(JsonInclude.Include.ALWAYS)
     private String link;
 

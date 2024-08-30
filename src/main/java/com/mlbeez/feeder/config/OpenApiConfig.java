@@ -14,7 +14,7 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
-                .addServersItem(new Server().url("http://localhost:8080"))
+                .addServersItem(new Server().url("https://preprodjavaapi.melbeez.com"))
                 .info(new Info()
                         .title("Melbeez-Java API")
                         .version("v1")

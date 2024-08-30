@@ -7,22 +7,54 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.hateoas.RepresentationModel;
 import java.time.LocalDateTime;
+
 import java.util.UUID;
 
 @Entity
 @Table(name = "warranty")
 public class Warranty extends RepresentationModel<Feed> {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO) // Use GenerationType.IDENTITY for auto-generated IDs
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(columnDefinition = "bigint")
     private Long id;
 
+    private String product_price_ids;
+
+    public String getProduct_price_ids() {
+        return product_price_ids;
+    }
+
+    public void setProduct_price_ids(String product_price_ids) {
+        this.product_price_ids = product_price_ids;
+    }
+
+    public String getOther_Details() {
+        return other_Details;
+    }
+
+    public void setOther_Details(String other_Details) {
+        this.other_Details = other_Details;
+    }
+
+    private String other_Details;
+
     private String vendor;
 
+    @Column(unique = true)
     private String warrantyId;
     private String name;
-    private Float monthlyPrice;
+    private String monthlyPrice;
     private Float annualPrice;
+
+    private String productId;
+
+    public String getProductId() {
+        return productId;
+    }
+
+    public void setProductId(String productId) {
+        this.productId = productId;
+    }
 
     private String planName;
 
@@ -107,7 +139,7 @@ public class Warranty extends RepresentationModel<Feed> {
         this.pictureLink = pictureLink;
     }
 
-    private int discount;
+    private String discount;
     private String pictureName;
 
 
@@ -152,11 +184,11 @@ public class Warranty extends RepresentationModel<Feed> {
         this.name = name;
     }
 
-    public Float getMonthlyPrice() {
+    public String getMonthlyPrice() {
         return monthlyPrice;
     }
 
-    public void setMonthlyPrice(Float monthlyPrice) {
+    public void setMonthlyPrice(String monthlyPrice) {
         this.monthlyPrice = monthlyPrice;
     }
 
@@ -168,11 +200,11 @@ public class Warranty extends RepresentationModel<Feed> {
         this.annualPrice = annualPrice;
     }
 
-    public int getDiscount() {
+    public String getDiscount() {
         return discount;
     }
 
-    public void setDiscount(int discount) {
+    public void setDiscount(String discount) {
         this.discount = discount;
     }
 
