@@ -46,9 +46,12 @@ public class InsurancePayment {
 
     private String default_payment_method;
 
-    private String payment_status="pending";
+    private String chargeRequest_status;
 
-    private String status;
+    private String subscription_Status;
+
+    private String invoice_status;
+
 
 
     @CreationTimestamp

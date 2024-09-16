@@ -36,7 +36,7 @@ public class FeedMediaController {
     @Operation(summary = "Upload a new Feed")
     @PostMapping(value = "/upload", consumes = {"multipart/form-data"})
     public ResponseEntity<String> handleUpload(Feed feed, @RequestPart("file")MultipartFile file) {
-        logger.debug("Request to Upload Feed {}", feed);
+        logger.info("Request to Upload Feed {}", feed);
         return feedService.createFeed(feed, file);
     }
 

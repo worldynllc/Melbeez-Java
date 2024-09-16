@@ -31,10 +31,11 @@ public class InsurancePaymentService {
 
         // Update the existing payment fields
         if (existingPayment != null) {
-            existingPayment.setStatus(updatedPayment.getStatus());
+            existingPayment.setSubscription_Status(updatedPayment.getSubscription_Status());
             existingPayment.setSubscriptionId(updatedPayment.getSubscriptionId());
             existingPayment.setInvoiceId(updatedPayment.getInvoiceId());
-            existingPayment.setPayment_status(updatedPayment.getPayment_status());
+            existingPayment.setInvoice_status(updatedPayment.getInvoice_status());
+            existingPayment.setChargeRequest_status(updatedPayment.getChargeRequest_status());
             existingPayment.setCurrency(updatedPayment.getCurrency());
             existingPayment.setAmount(updatedPayment.getAmount());
             existingPayment.setMode(updatedPayment.getMode());
