@@ -19,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.HashMap;
 import java.util.List;
@@ -46,10 +47,13 @@ public class CheckoutServiceTest {
 
     private Map<String, String> details;
 
+    @Value("${stripe.api.key}")
+    public String stripeApiKey;
+
     @BeforeEach
     void setUp() {
         // Set your Stripe API key here
-        Stripe.apiKey = "sk_test_4eC39HqLyjWDarjtT1zdp7dc";
+        Stripe.apiKey = stripeApiKey;
 
         details = new HashMap<>();
         details.put("warrantyId", "warranty123");
