@@ -121,8 +121,8 @@ public class CheckoutService {
             SessionCreateParams sessionParams = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
                     .setCustomer(user.getCustomerId())
-                    .setSuccessUrl("https://preprodjavaapi.melbeez.com/success")
-                    .setCancelUrl("https://preprodjavaapi.melbeez.com/cancel")
+                    .setSuccessUrl("https://configserv.krishdevops.xyz/success")
+                    .setCancelUrl("https://configserv.krishdevops.xyz/cancel")
                     .addLineItem(
                             SessionCreateParams.LineItem.builder()
                                     .setQuantity(1L)
