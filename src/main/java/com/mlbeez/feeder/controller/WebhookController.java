@@ -83,9 +83,11 @@ public class WebhookController {
 
     private void handleSubscriptionDeleted(Event event) {
         logger.info("Requested to handleSubscriptionDeleted");
-        Map<String, Object> data = (Map<String, Object>) event.getData().getObject();
-        String customerId = (String) data.get("customer");
-        webhookService.handleSubscriptionDeleted(customerId);
+        Subscription subscription=
+                (Subscription)event.getDataObjectDeserializer().getObject()
+                        .orElseThrow(()->new IllegalArgumentException("Unable to deserialize object"));
+//        String customerId = subscription.getCustomer();
+//        webhookService.handleSubscriptionDeleted(customerId);
     }
     private void handleInvoicePaymentFailed(Event event) throws StripeException {
         logger.info("Requested to handleInvoicePaymentFailed");

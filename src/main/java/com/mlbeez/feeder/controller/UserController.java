@@ -2,6 +2,8 @@ package com.mlbeez.feeder.controller;
 
 import com.mlbeez.feeder.model.UserRequest;
 import com.mlbeez.feeder.service.ThirdPartyService;
+import com.mlbeez.feeder.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +16,9 @@ public class UserController {
 
     private final ThirdPartyService thirdPartyService;
 
+    @Autowired
+    private UserService userService;
+
     public UserController(ThirdPartyService thirdPartyService) {
         this.thirdPartyService = thirdPartyService;
     }
@@ -22,4 +27,5 @@ public class UserController {
     public Mono<String> sendUserDetails(@RequestBody UserRequest userRequest) {
         return thirdPartyService.sendUserDetails(userRequest);
     }
+
 }

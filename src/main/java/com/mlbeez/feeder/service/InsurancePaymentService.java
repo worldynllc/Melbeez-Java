@@ -33,6 +33,13 @@ public class InsurancePaymentService {
         if (existingPayment != null) {
             existingPayment.setSubscription_Status(updatedPayment.getSubscription_Status());
             existingPayment.setSubscriptionId(updatedPayment.getSubscriptionId());
+            existingPayment.setCustomer(updatedPayment.getCustomer());
+            existingPayment.setName(updatedPayment.getName());
+            existingPayment.setEmail(updatedPayment.getEmail());
+            existingPayment.setPhoneNumber(updatedPayment.getPhoneNumber());
+            existingPayment.setProductId(updatedPayment.getProductId());
+            existingPayment.setUserId(updatedPayment.getUserId());
+            existingPayment.setWarrantyId(updatedPayment.getWarrantyId());
             existingPayment.setInvoiceId(updatedPayment.getInvoiceId());
             existingPayment.setInvoice_status(updatedPayment.getInvoice_status());
             existingPayment.setChargeRequest_status(updatedPayment.getChargeRequest_status());

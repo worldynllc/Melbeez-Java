@@ -190,6 +190,7 @@ public class WebhookService {
                 transaction.setPrice(invoice.getAmountPaid());
                 transaction.setReceiptUrl(receiptUrl);
                 transaction.setPhoneNumber(userDetail.getPhoneNumber());
+                transaction.setEmail(userDetail.getEmail());
                 transaction.setPaymentMethod(paymentMethod.getType());
                 transaction.setInvoice_status(invoice.getStatus());
                 transaction.setChargeRequest_status(charge.getStatus());
@@ -260,16 +261,16 @@ public class WebhookService {
         }
     }
 
-    public void handleSubscriptionDeleted(String customerId){
-        // Update the insurance payment status to "cancelled"
-        InsurancePayment existingPayment = insurancePaymentRepository.findByCustomer(customerId);
-        if (existingPayment != null) {
-            existingPayment.setSubscription_Status("cancelled");
-            insurancePaymentService.updatePayment(existingPayment);
-        } else {
-            logger.error("No insurance payment found for customerId: {}", customerId);
-        }
-    }
+//    public void handleSubscriptionDeleted(String customerId){
+//        // Update the insurance payment status to "cancelled"
+//        InsurancePayment existingPayment = insurancePaymentRepository.findByCustomer(customerId);
+//        if (existingPayment != null) {
+//            existingPayment.setSubscription_Status("cancelled");
+//            insurancePaymentService.updatePayment(existingPayment);
+//        } else {
+//            logger.error("No insurance payment found for customerId: {}", customerId);
+//        }
+//    }
 
     private PaymentMethod retrievePaymentMethod(String paymentMethodId) {
         try {

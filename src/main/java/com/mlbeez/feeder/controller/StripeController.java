@@ -69,4 +69,5 @@ public class StripeController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Insurance payment record not found.");
         }
     }
+
 }
