@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mlbeez.feeder.model.*;
 import com.mlbeez.feeder.repository.CardDetailsRepository;
-import com.mlbeez.feeder.repository.InsurancePaymentRepository;
 import com.mlbeez.feeder.repository.UserRepository;
 import com.mlbeez.feeder.repository.WarrantyRepository;
 import com.stripe.exception.StripeException;
@@ -15,8 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class WebhookService {
@@ -38,10 +38,14 @@ public class WebhookService {
     @Autowired
     private WarrantyRepository warrantyRepository;
 
+
     @Autowired
     private InsurancePaymentService insurancePaymentService;
+
     @Autowired
-    private InsurancePaymentRepository insurancePaymentRepository;
+    private  ThirdPartyService thirdPartyService;
+
+
 
     public void handleInvoicePaymentFailed(Invoice invoice) throws StripeException {
         if (invoice == null) {
@@ -62,7 +66,6 @@ public class WebhookService {
             paymentFailed.setStatus(charge.getStatus());
             paymentFailed.setReason(charge.getOutcome().getReason());
             paymentFailed.setFailure_code(charge.getFailureCode());
-            // Store payment failed details
             paymentFailedService.toStore(paymentFailed);
 
         } catch (Exception e) {
@@ -168,12 +171,10 @@ public class WebhookService {
             insurancePayment.setMode(invoice.getLines().getData().get(0).getType());
             insurancePaymentService.storePayment(insurancePayment);
 
-            // Retrieve the PaymentIntent from the Invoice
             String paymentIntentId = invoice.getPaymentIntent();
             PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
 
-            // Retrieve the Charge from the PaymentIntent
-            String chargeId = paymentIntent.getLatestCharge();
+               String chargeId = paymentIntent.getLatestCharge();
             Product product = Product.retrieve(productId);
 
             logger.info("Payment succeeded! Receipt URL: {}", receiptUrl);
@@ -199,11 +200,32 @@ public class WebhookService {
 
                 transactionService.storeHistory(transaction);
             }
+            UserRequest userRequest = new UserRequest();
 
+            UserRequest.User user = new UserRequest.User();
+            UserRequest.Profile profile = new UserRequest.Profile();
+
+            user.setPhone(userDetail.getPhoneNumber());
+            user.setEmail(userDetail.getEmail());
+            user.setIs_primary(true);
+
+            profile.setFirst_name(userDetail.getFirstName());
+            profile.setLast_name(userDetail.getLastName());
+            profile.setAddress(userDetail.getAddressLine1());
+            profile.setCity(userDetail.getCityName());
+            profile.setZip(userDetail.getZipCode());
+            profile.setState(userDetail.getStateName());
+            user.setProfile(profile);
+            List<UUID> productPriceIds = List.of(UUID.fromString(warranty.getProduct_price_ids()));
+            user.setProduct_price_ids(productPriceIds);
+            userRequest.setUsers(List.of(user));
+            logger.info("Sending request payload: {}", userRequest);
+            thirdPartyService.sendUserDetails(userRequest);
         } catch (Exception e) {
-            logger.error("Error processing invoice.payment_succeeded event: {}", e.getMessage(), e);
+            logger.error("Error processing invoice.payment_succeeded event: {}", e.getMessage());
         }
     }
+
 
     public void handleCheckoutSessionCompleted(Session session){
         if (session == null) {
@@ -260,17 +282,6 @@ public class WebhookService {
 
         }
     }
-
-//    public void handleSubscriptionDeleted(String customerId){
-//        // Update the insurance payment status to "cancelled"
-//        InsurancePayment existingPayment = insurancePaymentRepository.findByCustomer(customerId);
-//        if (existingPayment != null) {
-//            existingPayment.setSubscription_Status("cancelled");
-//            insurancePaymentService.updatePayment(existingPayment);
-//        } else {
-//            logger.error("No insurance payment found for customerId: {}", customerId);
-//        }
-//    }
 
     private PaymentMethod retrievePaymentMethod(String paymentMethodId) {
         try {

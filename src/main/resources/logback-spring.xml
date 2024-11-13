@@ -40,6 +40,11 @@
             <appender-ref ref="errorFile"/>
             <appender-ref ref="file"/>
         </logger>
+        <!-- Specific logger for ThirdPartyService with INFO level -->
+        <logger name="com.mlbeez.feeder.service.ThirdPartyService" level="INFO" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="file"/>
+        </logger>
 
         <!-- Specific package logger for controller -->
         <logger name="com.mlbeez.feeder.controller" level="INFO" additivity="false">

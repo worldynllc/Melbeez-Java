@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.*;
+
 
 
 @RestController
@@ -58,9 +58,6 @@ public class WebhookController {
             case "invoice.payment_succeeded":
                 handleInvoicePaymentSucceeded(event);
                 break;
-            case "customer.subscription.deleted":
-                handleSubscriptionDeleted(event);
-                break;
             case "invoice.payment_failed":
                 handleInvoicePaymentFailed(event);
                 break;
@@ -81,14 +78,6 @@ public class WebhookController {
         webhookService.handleInvoicePaymentSucceeded(invoice);
     }
 
-    private void handleSubscriptionDeleted(Event event) {
-        logger.info("Requested to handleSubscriptionDeleted");
-        Subscription subscription=
-                (Subscription)event.getDataObjectDeserializer().getObject()
-                        .orElseThrow(()->new IllegalArgumentException("Unable to deserialize object"));
-//        String customerId = subscription.getCustomer();
-//        webhookService.handleSubscriptionDeleted(customerId);
-    }
     private void handleInvoicePaymentFailed(Event event) throws StripeException {
         logger.info("Requested to handleInvoicePaymentFailed");
         Invoice invoice = (Invoice) event.getDataObjectDeserializer().getObject().orElse(null);

@@ -46,6 +46,7 @@ public class ConfigReader {
         try (Response response = client.newCall(request).execute()) {
             assert response.body() != null;
             String jsonResponse = response.body().string();
+            System.out.println("JSON Response: " + jsonResponse);
             Type listType = new TypeToken<ArrayList<Property>>(){}.getType();
             List<Property> propertyList = new Gson().fromJson(jsonResponse, listType);
             propertyList.forEach(prop -> getProperties().put(prop.getKey(), prop.getValue()));

@@ -13,16 +13,18 @@ import com.stripe.model.Subscription;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.RequestOptions;
 import com.stripe.param.PriceCreateParams;
+import com.stripe.param.SubscriptionCancelParams;
 import com.stripe.param.checkout.SessionCreateParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +35,12 @@ public class CheckoutService {
 
     @Value("${stripe.api.key}")
     public String stripeApiKey;
+    @Value("${payment.success.uri}")
+    public String successUri;
+
+    @Value("${payment.cancel.uri}")
+    public String cancelUri;
+
     @Autowired
     private UserService userService;
 
@@ -42,6 +50,9 @@ public class CheckoutService {
     @Autowired
     private InsurancePaymentRepository insurancePaymentRepository;
 
+    @Autowired
+    private InsurancePaymentService insurancePaymentService;
+
     private static final Logger logger= LoggerFactory.getLogger(CheckoutService.class);
 
     @Retryable(value = ApiConnectionException.class, maxAttempts = 3, backoff = @Backoff(delay = 2000))
@@ -49,7 +60,6 @@ public class CheckoutService {
 
         Map<String, String> responseData = new HashMap<>();
         Stripe.apiKey = stripeApiKey;
-
         try {
 
             String warrantyId = details.get("warrantyId");
@@ -65,7 +75,7 @@ public class CheckoutService {
             String firstName = details.get("firstName");
             String lastName = details.get("lastName");
             String monthlyPriceStr = details.get("monthlyPrice");
-            Float monthlyPrice = Float.parseFloat(monthlyPriceStr);
+            float monthlyPrice = Float.parseFloat(monthlyPriceStr);
             Long monthlyPriceLong = (long) (monthlyPrice * 100);
             String subscriptionType = details.get("subscriptionType");
 
@@ -121,8 +131,8 @@ public class CheckoutService {
             SessionCreateParams sessionParams = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
                     .setCustomer(user.getCustomerId())
-                    .setSuccessUrl("https://configserv.krishdevops.xyz/success")
-                    .setCancelUrl("https://configserv.krishdevops.xyz/cancel")
+                    .setSuccessUrl(successUri)
+                    .setCancelUrl(cancelUri)
                     .addLineItem(
                             SessionCreateParams.LineItem.builder()
                                     .setQuantity(1L)
@@ -160,6 +170,38 @@ public class CheckoutService {
         // Handle connection failure, possibly log and notify the user
         logger.error("Unable to connect to Stripe after retries: " + e.getMessage(),e);
         throw new RuntimeException("Unable to connect to Stripe after retries: " + e.getMessage());
+    }
+
+    public ResponseEntity<String> deleteSubscription(String subscriptionId){
+        // Retrieve the subscription
+        Subscription resource = null;
+        try {
+            resource = Subscription.retrieve(subscriptionId);
+        } catch (StripeException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+
+        // Cancel the subscription
+        SubscriptionCancelParams params = SubscriptionCancelParams.builder().build();
+        Subscription subscription = null;
+        try {
+            subscription = resource.cancel(params);
+        } catch (StripeException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+
+        // Retrieve the customer ID from the canceled subscription
+        String customerId = subscription.getCustomer();
+
+        // Update the insurance payment status to "cancelled"
+        InsurancePayment existingPayment = insurancePaymentRepository.findByCustomerAndSubscriptionId(customerId,subscriptionId);
+        if (existingPayment != null) {
+            existingPayment.setSubscription_Status("cancelled");
+            insurancePaymentService.updatePayment(existingPayment,subscriptionId);
+            return ResponseEntity.ok("Subscription and insurance payment status updated to cancelled.");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Insurance payment record not found.");
+        }
     }
 
 }

@@ -50,7 +50,6 @@ public class Transactions {
 
     private String invoice_status;
 
-    // Method to convert to DTO
     public TransactionDto toLogDTO() {
 
         TransactionDto dto = new TransactionDto();

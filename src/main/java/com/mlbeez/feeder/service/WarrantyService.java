@@ -1,33 +1,24 @@
 package com.mlbeez.feeder.service;
 
 import com.mlbeez.feeder.controller.WarrantyController;
-
-import com.mlbeez.feeder.model.UpdateWarrantyRequest;
-import com.mlbeez.feeder.model.Warranty;
-
-
+import com.mlbeez.feeder.model.*;
 import com.mlbeez.feeder.repository.WarrantyRepository;
 import com.mlbeez.feeder.service.exception.ConstraintViolationException;
 import com.mlbeez.feeder.service.exception.DataNotFoundException;
 import com.mlbeez.feeder.service.exception.InternalServerException;
-
-
 import com.stripe.exception.StripeException;
 import com.stripe.model.Product;
 import com.stripe.param.ProductCreateParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
-
 
 @Service
 public class WarrantyService {
@@ -35,13 +26,12 @@ public class WarrantyService {
     @Autowired
    private WarrantyRepository warrantyRepository;
 
-
     @Autowired
     private MediaStoreService mediaStoreService;
 
     private static final Logger logger= LoggerFactory.getLogger(WarrantyService.class);
 
-    public ResponseEntity<String> createWarranty(Warranty warranty, MultipartFile multipart) throws StripeException {
+    public String createWarranty(Warranty warranty, MultipartFile multipart) throws StripeException {
         String fileName = multipart.getOriginalFilename();
         String[] partStrings = fileName.split("\\.");
         String file = partStrings[0];
@@ -80,7 +70,6 @@ public class WarrantyService {
             message = "Error uploading file: " + ex.getMessage();
         }
 
-        //create the warranty product in Stripe
         ProductCreateParams productParams = ProductCreateParams.builder()
                 .setName(warranty.getName())
                 .setDescription(warranty.getPlanDescription())
@@ -90,7 +79,7 @@ public class WarrantyService {
 
         warranty.setProductId(product.getId());
         warrantyRepository.save(warranty);
-        return ResponseEntity.status(HttpStatus.CREATED).body(message);
+        return message;
     }
 
     public void deleteWarrantyById(Long id) {
@@ -100,6 +89,7 @@ public class WarrantyService {
         }
         try{
 
+            assert id != null;
             Optional<Warranty> optionalWarranty = warrantyRepository.findById(id);
             if (optionalWarranty.isPresent()) {
                 Warranty warranty = optionalWarranty.get();
@@ -119,6 +109,7 @@ public class WarrantyService {
 
     }
 
+    @Transactional(readOnly = true)
     public List<Warranty> getWarranty() {
         try{
             List<Warranty> warranty = warrantyRepository.findAll();
@@ -127,13 +118,12 @@ public class WarrantyService {
                 throw new DataNotFoundException("Warranty not found");
             }
             for (Warranty warranty1 : warranty) {
-                Link selfLink = WebMvcLinkBuilder.linkTo(WarrantyController.class).withSelfRel();
+                Link selfLink= WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarrantyController.class)
+                                .getWarrantyById(warranty1.getWarrantyId()))
+                                .withRel("share");
                 warranty1.add(selfLink);
             }
-            Link link = WebMvcLinkBuilder.linkTo(WarrantyController.class).withSelfRel();
-            CollectionModel<Warranty> result = CollectionModel.of(warranty, link);
             return warranty;
-
         }
         catch (Exception e){
             logger.error("Internal error occurred while retrieving warranty");
