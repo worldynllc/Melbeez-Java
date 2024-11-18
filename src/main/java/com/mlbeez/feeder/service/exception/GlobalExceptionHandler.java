@@ -9,21 +9,27 @@ import org.springframework.web.context.request.WebRequest;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(WarrantyNotFoundException.class)
-    public ResponseEntity<?> handleWarrantyNotFoundException(WarrantyNotFoundException ex, WebRequest request) {
+    @ExceptionHandler(DataNotFoundException.class)
+    public ResponseEntity<?> handleWarrantyNotFoundException(DataNotFoundException ex, WebRequest request) {
         ErrorDetails errorDetails = new ErrorDetails(ex.getMessage(), request.getDescription(false));
         return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(InvalidWarrantyException.class)
-    public ResponseEntity<?> handleInvalidWarrantyException(InvalidWarrantyException ex, WebRequest request) {
+    @ExceptionHandler(InvalidDataException.class)
+    public ResponseEntity<?> handleInvalidWarrantyException(InvalidDataException ex, WebRequest request) {
         ErrorDetails errorDetails = new ErrorDetails(ex.getMessage(), request.getDescription(false));
         return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleGlobalException(Exception ex, WebRequest request) {
+    @ExceptionHandler(InternalServerException.class)
+    public ResponseEntity<?> handleGlobalException(InternalServerException ex, WebRequest request) {
         ErrorDetails errorDetails = new ErrorDetails(ex.getMessage(), request.getDescription(false));
         return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<?> handleConstraintViolationException(ConstraintViolationException ex,WebRequest request){
+        ErrorDetails errorDetails=new ErrorDetails(ex.getMessage(), request.getDescription(false));
+        return new ResponseEntity<>(errorDetails,HttpStatus.BAD_REQUEST);
     }
 }

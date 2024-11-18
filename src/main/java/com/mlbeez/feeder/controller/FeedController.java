@@ -40,7 +40,7 @@ public class FeedController {
     @Operation(summary = "Delete a feed by ID")
     @DeleteMapping("feeds/id/{id}")
     public ResponseEntity<?> deleteFeedById(@PathVariable("id") Long id) {
-        logger.debug("Request to Delete Feed {}", id);
+        logger.info("Request to Delete Feed {}", id);
         feedService.deleteFeedById(id);
         return ResponseEntity.ok().build();
     }
@@ -49,14 +49,14 @@ public class FeedController {
     @Operation(summary = "Get all feeds")
     @GetMapping("/feeds")
     public List<Feed> getAllFeeds() {
-        logger.debug("Request to GetAllFeeds");
+        logger.info("Request to GetAllFeeds");
         return feedService.getAllFeeds();
     }
 
     @Operation(summary = "Get file location by ID")
     @GetMapping("/file/{id}")
     public String handleGet(@PathVariable String id) {
-        logger.debug("Request to Get file {}", id);
+        logger.info("Request to Get file {}", id);
         return service.getMediaStoreService().getFileLocation(id + ".jpeg");
     }
 

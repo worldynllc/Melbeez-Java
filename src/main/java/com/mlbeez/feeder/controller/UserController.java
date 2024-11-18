@@ -1,25 +1,35 @@
 package com.mlbeez.feeder.controller;
+import com.mlbeez.feeder.service.UserService;
+import com.stripe.exception.StripeException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
-import com.mlbeez.feeder.model.UserRequest;
-import com.mlbeez.feeder.service.ThirdPartyService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api")
 public class UserController {
 
-    private final ThirdPartyService thirdPartyService;
 
-    public UserController(ThirdPartyService thirdPartyService) {
-        this.thirdPartyService = thirdPartyService;
+    @Autowired
+    private UserService userService;
+
+    @PostMapping("/create-user")
+    public Map<String,String> createUser(@RequestBody Map<String,String> details) throws StripeException {
+        String userId = details.get("userId");
+        String userName = details.get("userName");
+        String phoneNumber = details.get("phoneNumber");
+        String email = details.get("email");
+        String cityName = details.get("cityName");
+        String stateName = details.get("stateName");
+        String zipCode = details.get("zipCode");
+        String addressLine1 = details.get("addressLine1");
+        String firstName = details.get("firstName");
+        String lastName = details.get("lastName");
+
+        userService.getOrCreateUser(userId, userName, email, phoneNumber, firstName, lastName, cityName,
+                stateName, zipCode, addressLine1);
+        return details;
     }
 
-    @PostMapping("/send-user")
-    public Mono<String> sendUserDetails(@RequestBody UserRequest userRequest) {
-        return thirdPartyService.sendUserDetails(userRequest);
-    }
 }

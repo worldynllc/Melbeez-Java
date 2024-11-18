@@ -4,39 +4,52 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mlbeez.feeder.model.UserRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+
 
 @Service
 public class ThirdPartyService {
 
     private static final Logger logger = LoggerFactory.getLogger(ThirdPartyService.class);
     private final WebClient webClient;
+    private final ObjectMapper objectMapper;
 
-    public ThirdPartyService(WebClient webClient) {
+    @Value("${akko.api.uri}")
+    private  String akkoUri;
+
+    @Value("${akko.api.key}")
+    private  String akkoApiKey;
+
+    public ThirdPartyService(WebClient webClient, ObjectMapper objectMapper) {
         this.webClient = webClient;
+        this.objectMapper = objectMapper;
+
     }
 
-    public Mono<String> sendUserDetails(UserRequest userRequest) {
+    public void sendUserDetails(UserRequest userRequest) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
             String jsonPayload = objectMapper.writeValueAsString(userRequest);
             logger.info("Sending payload: {}", jsonPayload);
+
         } catch (Exception e) {
-            logger.error("Error serializing request: ", e);
+            logger.error("Error serializing request or in API call: {}",e.getMessage());
         }
 
-
-        return webClient.post()
-                .uri("https://api-gateway.staging.cloud.getakko.com/api/v2/partners/users/")
-                .header("x-api-key", "eaff5c23-f23e-4eb3-8872-41abfd732d8b")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        webClient.post()
+                .uri(akkoUri)
+                .header("x-api-key", akkoApiKey)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(userRequest))
                 .retrieve()
-                .bodyToMono(String.class);
+                .bodyToMono(String.class)
+                .subscribe(response ->
+                    logger.info("Response received: " + response),
+                        error ->logger.error("Error occurred: " + error.getMessage()),
+                        () -> logger.info("Request completed successfully to Akko API")
+                );
     }
 }

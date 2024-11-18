@@ -11,8 +11,10 @@ import java.util.List;
 public interface InsurancePaymentRepository extends JpaRepository<InsurancePayment,Long> {
 
     
-    InsurancePayment findByCustomer(String customer);
+
     List<InsurancePayment> findAllByProductId(String productId);
 
     List<InsurancePayment>  findByUserId(String userId);
+
+    InsurancePayment findByCustomerAndSubscriptionId(String customerId, String subscriptionId);
 }

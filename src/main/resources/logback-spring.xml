@@ -7,11 +7,22 @@
                 <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
             </encoder>
         </appender>
-        <!-- File appender -->
+        <!-- File appender for general logs -->
         <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
             <file>logs/spring-boot-application.log</file>
             <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
                 <fileNamePattern>logs/%d{yyyy-MM-dd}/spring-boot-application.%d{HH}.log</fileNamePattern>
+                <maxHistory>30</maxHistory>
+            </rollingPolicy>
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+        <!-- File appender for ERROR logs -->
+        <appender name="errorFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>logs/error.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>logs/%d{yyyy-MM-dd}/error.%d{HH}.log</fileNamePattern>
                 <maxHistory>30</maxHistory>
             </rollingPolicy>
             <encoder>
@@ -24,9 +35,27 @@
             <appender-ref ref="file"/>
         </root>
         <!-- Specific package logger configuration -->
-        <logger name="com.mlbeez.feeder.controller" level="DEBUG" additivity="false">
+        <logger name="com.mlbeez.feeder.service" level="ERROR" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="errorFile"/>
+            <appender-ref ref="file"/>
+        </logger>
+        <!-- Specific logger for ThirdPartyService with INFO level -->
+        <logger name="com.mlbeez.feeder.service.ThirdPartyService" level="INFO" additivity="false">
             <appender-ref ref="console"/>
             <appender-ref ref="file"/>
         </logger>
+
+        <!-- Specific package logger for controller -->
+        <logger name="com.mlbeez.feeder.controller" level="INFO" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="file"/>
+        </logger>
+
+        <!-- Separate loggers for ERROR levels -->
+        <logger name="ERROR_LOGGER" level="ERROR" additivity="false">
+            <appender-ref ref="errorFile"/>
+        </logger>
+
     </springProfile>
 </configuration>
