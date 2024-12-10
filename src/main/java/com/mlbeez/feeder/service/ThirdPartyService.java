@@ -31,6 +31,7 @@ public class ThirdPartyService {
     }
 
     public void sendUserDetails(UserRequest userRequest) {
+        logger.info("Requested to send the user details to AKKO");
         try {
             String jsonPayload = objectMapper.writeValueAsString(userRequest);
             logger.info("Sending payload: {}", jsonPayload);

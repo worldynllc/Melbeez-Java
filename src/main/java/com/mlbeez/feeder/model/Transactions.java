@@ -1,5 +1,4 @@
 package com.mlbeez.feeder.model;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -43,13 +42,13 @@ public class Transactions {
     private String customerId;
 
     @CreationTimestamp
+    @Column(name = "created_at",columnDefinition = "TIMESTAMP WITH TIME ZONE")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
     private String chargeRequest_status;
 
     private String invoice_status;
-
     public TransactionDto toLogDTO() {
 
         TransactionDto dto = new TransactionDto();

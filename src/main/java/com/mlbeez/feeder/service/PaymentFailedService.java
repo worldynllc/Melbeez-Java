@@ -11,8 +11,8 @@ public class PaymentFailedService {
     @Autowired
     PaymentFailedRepository paymentFailedRepository;
 
-    public PaymentFailed toStore(PaymentFailed paymentFailed)
+    public void toStore(PaymentFailed paymentFailed)
     {
-        return paymentFailedRepository.save(paymentFailed);
+        paymentFailedRepository.save(paymentFailed);
     }
 }

@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
-
 @RestController
 @RequestMapping("/api")
 public class UserController {
@@ -14,6 +13,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    //using for store the user details in local database
     @PostMapping("/create-user")
     public Map<String,String> createUser(@RequestBody Map<String,String> details) throws StripeException {
         String userId = details.get("userId");
@@ -31,5 +31,4 @@ public class UserController {
                 stateName, zipCode, addressLine1);
         return details;
     }
-
 }

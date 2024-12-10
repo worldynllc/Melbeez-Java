@@ -1,4 +1,4 @@
-package com.mlbeez.feeder.controller;
+package com.mlbeez.feeder.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +17,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins(allowedOrigins)
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
-                .allowedHeaders("*")
+                   .allowedHeaders("*")
                 .allowCredentials(true);
     }
 }

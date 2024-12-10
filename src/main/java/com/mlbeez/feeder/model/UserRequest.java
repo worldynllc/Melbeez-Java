@@ -1,7 +1,4 @@
 package com.mlbeez.feeder.model;
-
-//import java.text.SimpleDateFormat;
-//import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,7 +6,6 @@ public class UserRequest {
 
     private List<User> users;
 
-    // Getters and Setters
     public List<User> getUsers() {
         return users;
     }
@@ -90,61 +86,15 @@ public class UserRequest {
             this.last_name = last_name;
         }
 
-//        public String getAlt_email() {
-//            return alt_email;
-//        }
-//
-//        public void setAlt_email(String alt_email) {
-//            this.alt_email = alt_email;
-//        }
-//
-//        public String getProperty_type() {
-//            return property_type;
-//        }
-//
-//        public void setProperty_type(String property_type) {
-//            this.property_type = property_type;
-//        }
-//
-//        public String getRes_type() {
-//            return res_type;
-//        }
-//
-//        public void setRes_type(String res_type) {
-//            this.res_type = res_type;
-//        }
-
         private String first_name;
         private String last_name;
-//        private String birthday;
-//        private String alt_email;
+
         private String address;
         private String city;
-//        private String street;
+
         private String zip;
-//        private String apt;
+
         private String state;
-//        private String property_type;
-//        private String res_type;
-
-        // Getters and Setters
-
-//
-//        public String getBirthday() {
-//            return birthday;
-//        }
-//
-//        public void setBirthday(String birthday) {
-//            try {
-//                SimpleDateFormat inputFormat = new SimpleDateFormat("MMMM dd, yyyy");
-//                Date date = inputFormat.parse(birthday);
-//                SimpleDateFormat outputFormat = new SimpleDateFormat("MMMM dd, yyyy");
-//                this.birthday = outputFormat.format(date);
-//            } catch (Exception e) {
-//                // Handle parsing error
-//                this.birthday = birthday;  // Fallback to the original value if parsing fails
-//            }
-//        }
 
 
         public String getAddress() {
@@ -163,14 +113,6 @@ public class UserRequest {
             this.city = city;
         }
 
-//        public String getStreet() {
-//            return street;
-//        }
-//
-//        public void setStreet(String street) {
-//            this.street = street;
-//        }
-
         public String getZip() {
             return zip;
         }
@@ -179,14 +121,6 @@ public class UserRequest {
             this.zip = zip;
         }
 
-//        public String getApt() {
-//            return apt;
-//        }
-//
-//        public void setApt(String apt) {
-//            this.apt = apt;
-//        }
-//
         public String getState() {
             return state;
         }

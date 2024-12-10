@@ -13,9 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,16 +62,6 @@ public class WarrantyController {
     public ResponseEntity<Warranty> getWarrantyById(@PathVariable String id) {
         Optional<Warranty> warranty = warrantyRepository.findByWarrantyId(id);
         return warranty.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/link/{id}")
-    public URI generateAppDeepLink(@PathVariable String id) {
-        return UriComponentsBuilder.newInstance()
-                .scheme("myapp") // Custom scheme for mobile app
-                .host("warranty")
-                .path("/{id}")
-                .buildAndExpand(id)
-                .toUri();
     }
 
     @Operation(summary = "Update a warranty by ID")

@@ -1,10 +1,7 @@
 package com.mlbeez.feeder.service;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mlbeez.feeder.model.*;
 import com.mlbeez.feeder.repository.CardDetailsRepository;
+import com.mlbeez.feeder.repository.InsurancePaymentRepository;
 import com.mlbeez.feeder.repository.UserRepository;
 import com.mlbeez.feeder.repository.WarrantyRepository;
 import com.stripe.exception.StripeException;
@@ -17,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 
 @Service
 public class WebhookService {
@@ -38,95 +36,64 @@ public class WebhookService {
     @Autowired
     private WarrantyRepository warrantyRepository;
 
-
     @Autowired
     private InsurancePaymentService insurancePaymentService;
 
     @Autowired
+    private InsurancePaymentRepository insurancePaymentRepository;
+
+    @Autowired
     private  ThirdPartyService thirdPartyService;
 
+    @Autowired
+    private CheckoutService checkoutService;
 
+    public void handleChargeSucceeded(Charge charge){
 
-    public void handleInvoicePaymentFailed(Invoice invoice) throws StripeException {
-        if (invoice == null) {
-            logger.error("Invoice is null in invoice.payment_failed event");
-            return;
-        }
-        User userDetail = userRepository.findByCustomerId(invoice.getCustomer());
-        if (userDetail == null) {
-            logger.error("User not found for customerId: {}", invoice.getCustomer());
-            return;
-        }
-        Charge charge = Charge.retrieve(invoice.getCharge());
         try {
-            PaymentFailed paymentFailed = new PaymentFailed();
-            paymentFailed.setCustomer(invoice.getCustomer());
-            paymentFailed.setEmail(charge.getBillingDetails().getEmail());
-            paymentFailed.setName(charge.getBillingDetails().getName());
-            paymentFailed.setStatus(charge.getStatus());
-            paymentFailed.setReason(charge.getOutcome().getReason());
-            paymentFailed.setFailure_code(charge.getFailureCode());
-            paymentFailedService.toStore(paymentFailed);
 
-        } catch (Exception e) {
-            logger.error("Failed to store paymentFailed: {}", e.getMessage(), e);
-        }
+            if(charge==null){
+                logger.error("Charge is null in charge.succeeded event");
+                return;
+            }
+            String customerId= charge.getCustomer();
 
-        logger.info("PaymentMethod ID from PaymentIntent: {}", charge.getPaymentMethod());
+            User userDetail = userRepository.findByCustomerId(customerId);
+            if (userDetail == null) {
+                logger.error("User not found for customerId: {}", customerId);
+                return;
+            }
+            PaymentMethod paymentMethod;
 
-        if (charge.getPaymentMethod() != null) {
-            PaymentMethod paymentMethod = retrievePaymentMethod(charge.getPaymentMethod());
+            paymentMethod = PaymentMethod.retrieve(charge.getPaymentMethod());
             if (paymentMethod != null) {
                 saveCardDetails(paymentMethod, userDetail);
-                String productId = invoice.getLines().getData().get(0).getPlan().getProduct();
-
-                Product product = Product.retrieve(productId);
-
-                try{
-                    if (paymentMethod.getId() != null) {
-                        Transactions transaction = new Transactions();
-                        transaction.setUserId(userDetail.getUserId());
-                        transaction.setProductName(product.getName());
-                        transaction.setCard(paymentMethod.getCard().getLast4());
-                        transaction.getCreatedAt();
-                        transaction.setPrice(invoice.getLines().getData().get(0).getPlan().getAmount());
-                        transaction.setPaymentMethod(paymentMethod.getType());
-                        transaction.setChargeRequest_status(charge.getStatus());
-                        transaction.setInvoice_status(invoice.getStatus());
-                        transaction.setReceiptUrl("");
-                        transaction.setCustomerId(invoice.getCustomer());
-                        transaction.setEmail(userDetail.getEmail());
-                        transaction.setPhoneNumber(userDetail.getPhoneNumber());
-                        transaction.setProductId(productId);
-                        transaction.setTransactionId(charge.getId());
-                        transaction.setInterval(invoice.getLines().getData().get(0).getPrice().getRecurring().getInterval());
-
-                        transactionService.storeHistory(transaction);
-
-                        TransactionDto dto=transaction.toLogDTO();
-                        ObjectMapper objectMapper=new ObjectMapper();
-                        objectMapper.registerModule(new JavaTimeModule());
-                        try{
-                            String paymentFailedJson=objectMapper.writeValueAsString(dto);
-                            logger.error("PaymentFailed entity details: {}",paymentFailedJson);
-                        }catch (JsonProcessingException e)
-                        {
-                            logger.error("Error converting PaymentFailed object to JSON", e);
-                        }
-                    }
-                }
-                catch (Exception e){
-                    logger.error("Failed to store transaction details for charge ID: {}. Error: {}", charge.getId(), e.getMessage(), e);
-                }
-
+            } else {
+                logger.error("Payment method is null for paymentMethodId: {}, paymentMethodId", customerId);
             }
         }
+        catch (StripeException e) {
+            logger.error("StripeException while retrieving payment method for paymentMethodId {}:",
+                    e.getMessage());
+        }
+        catch (Exception e) {
+            logger.error("Exception while saving card details for paymentMethodId {}:",e.getMessage());
+        }
+
     }
+
 
     public void handleInvoicePaymentSucceeded(Invoice invoice){
         if (invoice == null) {
             logger.error("Invoice is null in invoice.payment_succeeded event");
             return;
+        }
+        String mode;
+        try {
+            Price price=Price.retrieve(invoice.getLines().getData().get(0).getPrice().getId());
+            mode=price.getMetadata().get("type");
+        } catch (StripeException e) {
+            throw new RuntimeException(e);
         }
 
         try {
@@ -152,6 +119,14 @@ public class WebhookService {
             Warranty warranty = warrantyOptional.get();
             String productId = subscription.getItems().getData().get(0).getPrice().getProduct();
 
+            Optional<InsurancePayment> insurance=
+                    insurancePaymentRepository.findBySubscriptionIdAndUserIdAndWarrantyId(subscription.getId(),
+                            userDetail.getUserId(),warranty.getWarrantyId());
+            if(insurance.isPresent()){
+                InsurancePayment insurancePayment=insurance.get();
+                insurancePaymentRepository.deleteById(insurancePayment.getId());
+            }
+
             InsurancePayment insurancePayment = new InsurancePayment();
             insurancePayment.setSubscriptionId(subscription.getId());
             insurancePayment.setUserId(userDetail.getUserId());
@@ -165,6 +140,7 @@ public class WebhookService {
             insurancePayment.setWarrantyId(warranty.getWarrantyId());
             insurancePayment.setAmount(invoice.getAmountPaid());
             insurancePayment.setInvoiceId(invoice.getId());
+            insurancePayment.setSubscriptionMode(mode);
             insurancePayment.setCurrency(invoice.getCurrency());
             insurancePayment.setSubscription_Status(subscription.getStatus());
             insurancePayment.setChargeRequest_status(charge.getStatus());
@@ -187,7 +163,6 @@ public class WebhookService {
                 transaction.setProductId(productId);
                 transaction.setCustomerId(invoice.getCustomer());
                 transaction.setCard(paymentMethod.getCard().getLast4());
-                transaction.getCreatedAt();
                 transaction.setPrice(invoice.getAmountPaid());
                 transaction.setReceiptUrl(receiptUrl);
                 transaction.setPhoneNumber(userDetail.getPhoneNumber());
@@ -200,6 +175,8 @@ public class WebhookService {
 
                 transactionService.storeHistory(transaction);
             }
+
+
             UserRequest userRequest = new UserRequest();
 
             UserRequest.User user = new UserRequest.User();
@@ -224,8 +201,9 @@ public class WebhookService {
         } catch (Exception e) {
             logger.error("Error processing invoice.payment_succeeded event: {}", e.getMessage());
         }
-    }
 
+
+    }
 
     public void handleCheckoutSessionCompleted(Session session){
         if (session == null) {
@@ -246,50 +224,21 @@ public class WebhookService {
                     e.getMessage(),e);
             return;
         }
-        User userDetail;
-        try {
-            userDetail = userRepository.findByCustomerId(session.getCustomer());
-            if (userDetail == null) {
-                logger.error("User not found for customerId: {}", session.getCustomer());
-                return;
-            }
-        } catch (Exception e) {
-            logger.error("Exception while fetching user details for customerId {}: {}", session.getCustomer(), e.getMessage(), e);
-            return;
+        boolean isOneTimeSubscription = checkIfOneTimeSubscription(session);
+        if (isOneTimeSubscription) {
+            checkoutService.cancelSubscriptionAtPeriodEnd(subscription.getId());
         }
 
-        // Extract and save card details
-        String paymentMethodId = subscription.getDefaultPaymentMethod();
-        if (paymentMethodId != null) {
-
-            PaymentMethod paymentMethod;
-            try{
-                paymentMethod=PaymentMethod.retrieve(paymentMethodId);
-                if(paymentMethod!=null)
-                {
-                    saveCardDetails(paymentMethod, userDetail);
-                }
-                else {
-                    logger.error("Payment method is null for paymentMethodId: {}, paymentMethodId",paymentMethodId);
-                }
-            }
-            catch (StripeException e){
-                logger.error("StripeException while retrieving payment method for paymentMethodId {}: {}", paymentMethodId, e.getMessage(),e);
-            }
-            catch (Exception e){
-                logger.error("Exception while saving card details for paymentMethodId {}: {}",paymentMethodId, e.getMessage(),e);
-            }
-
-        }
     }
 
-    private PaymentMethod retrievePaymentMethod(String paymentMethodId) {
-        try {
-            return PaymentMethod.retrieve(paymentMethodId);
-        } catch (StripeException e) {
-            logger.error("Error retrieving payment method: {}", e.getMessage());
-            return null;
-        }
+    private boolean checkIfOneTimeSubscription(Session session) {
+        logger.info("Requested to check the one time or Recurring payment");
+        return session!=null && "one_time".equals(session.getMetadata().get("type"));
+    }
+
+
+    public void handleCustomerSubscriptionDeleted(Subscription subscription){
+       insurancePaymentService.deleteSubscriptionPayment(subscription.getCustomer(), subscription.getId());
     }
 
     private Subscription retrieveSubscription(String subscriptionId) {
@@ -301,8 +250,17 @@ public class WebhookService {
         }
     }
 
-    private void saveCardDetails(PaymentMethod paymentMethod, User userDetail) {
+    public void saveCardDetails(PaymentMethod paymentMethod, User userDetail) {
+        logger.info("Requested to save the card details");
         try {
+
+            Optional<CardDetails>findUSerId=cardDetailsRepository.findByUserId(userDetail.getUserId());
+            if(findUSerId.isPresent()){
+                CardDetails cardDetails= findUSerId.get();
+                Long cardId= cardDetails.getId();
+                cardDetailsRepository.deleteById(cardId);
+            }
+
             CardDetails cardDetails = new CardDetails();
             cardDetails.setPayment_methodId(paymentMethod.getId());
             cardDetails.setCardBrand(paymentMethod.getCard().getBrand());
@@ -311,6 +269,7 @@ public class WebhookService {
             cardDetails.setExp_year(paymentMethod.getCard().getExpYear());
             cardDetails.setCountry(paymentMethod.getCard().getCountry());
             cardDetails.setFunding(paymentMethod.getCard().getFunding());
+            cardDetails.setUserId(userDetail.getUserId());
             cardDetails.setCustomer(userDetail.getCustomerId());
             cardDetails.setType(paymentMethod.getType());
             cardDetails.setEmail(paymentMethod.getBillingDetails().getEmail());
@@ -318,7 +277,7 @@ public class WebhookService {
 
             cardDetailsRepository.save(cardDetails);
         } catch (Exception e) {
-            logger.error("Failed to save card details: {}", e.getMessage(), e);
+            logger.error("Failed to save card details: {}", e.getMessage());
 
         }
     }
