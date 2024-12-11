@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface IMediaStore {
 
-    public String uploadFile(String fileName, InputStream inputStream) throws IOException;
+    public String uploadFile(String fileName, InputStream inputStream,String folderName) throws IOException;
 
     public String getFileLocation(String filename);
 

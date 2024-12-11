@@ -1,5 +1,4 @@
 package com.mlbeez.feeder.service;
-
 import com.mlbeez.feeder.model.InsurancePayment;
 import com.mlbeez.feeder.model.User;
 import com.mlbeez.feeder.model.Warranty;
@@ -13,20 +12,16 @@ import com.stripe.model.Subscription;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.RequestOptions;
 import com.stripe.param.PriceCreateParams;
-import com.stripe.param.SubscriptionCancelParams;
 import com.stripe.param.checkout.SessionCreateParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -49,9 +44,6 @@ public class CheckoutService {
 
     @Autowired
     private InsurancePaymentRepository insurancePaymentRepository;
-
-    @Autowired
-    private InsurancePaymentService insurancePaymentService;
 
     private static final Logger logger= LoggerFactory.getLogger(CheckoutService.class);
 
@@ -78,45 +70,49 @@ public class CheckoutService {
             float monthlyPrice = Float.parseFloat(monthlyPriceStr);
             Long monthlyPriceLong = (long) (monthlyPrice * 100);
             String subscriptionType = details.get("subscriptionType");
+            String paymentType=details.get("paymentType");
+
 
             String idempotencyKey = userId + "_" + System.currentTimeMillis();
 
-            // Retrieve or create user and customer
-            User user = userService.getOrCreateUser(userId, userName, email, phoneNumber, firstName, lastName, cityName,
-                    stateName, zipCode, addressLine1);
+            Optional<InsurancePayment> findSubscription=
+                    insurancePaymentRepository.findByUserIdAndWarrantyId(userId,warrantyId );
 
-            // Check if the warranty exists
-            Optional<Warranty> findProduct = warrantyRepository.findByWarrantyId(warrantyId);
-            if (findProduct.isEmpty()) {
+            if (findSubscription.isPresent()){
+                String subscriptionId=findSubscription.get().getSubscriptionId();
+                Subscription stripeSubscription = Subscription.retrieve(subscriptionId);
+                if ("active".equals(stripeSubscription.getStatus())) {
+                    responseData.put("error", "You already have an active subscription for this warranty.");
+                    logger.info("Requested to user already purchased productId in InsurancePayment table");
+                    return responseData;
+                }
+
+            }
+
+            logger.info("Requested to Get the WarrantyId in warranty table");
+            Optional<Warranty> findWarranty = warrantyRepository.findByWarrantyId(warrantyId);
+            if (findWarranty.isEmpty()) {
                 logger.error("Warranty not found in warranty table");
                 responseData.put("error", "Warranty not found.");
                 return responseData;
             }
 
-            Warranty warranties = findProduct.get();
+            Warranty warranties = findWarranty.get();
+            logger.info("Requested to get the productId  from Warranty table");
             String productId = warranties.getProductId();
-            List<InsurancePayment> findSubscriptionList = insurancePaymentRepository.findAllByProductId(productId);
 
+            User user = userService.getOrCreateUser(userId, userName, email, phoneNumber, firstName, lastName, cityName,
+                    stateName, zipCode, addressLine1);
 
-            // Check if any active subscription exists for the user
-            for (InsurancePayment subscription : findSubscriptionList) {
-                if (subscription != null && subscription.getSubscriptionId() != null && subscription.getUserId().equals(userId)) {
-                    Subscription stripeSubscription = Subscription.retrieve(subscription.getSubscriptionId());
-                    if ("active".equals(stripeSubscription.getStatus())) {
-                        responseData.put("error", "You already have an active subscription for this warranty.");
-                        return responseData;
-                    }
-                }
-            }
-
-            // Determine the interval for subscription
+            logger.info("Requested to create the Interval in stripe");
             PriceCreateParams.Recurring.Interval interval = "yearly".equals(subscriptionType)
                     ? PriceCreateParams.Recurring.Interval.YEAR
                     : PriceCreateParams.Recurring.Interval.MONTH;
 
-            // Create a new recurring price for the product
+
+            logger.info("Requested to create the Price in stripe");
             PriceCreateParams priceParams = PriceCreateParams.builder()
-                    .setUnitAmount(monthlyPriceLong) // Amount in cents
+                    .setUnitAmount(monthlyPriceLong)
                     .setCurrency(currency)
                     .setRecurring(
                             PriceCreateParams.Recurring.builder()
@@ -124,10 +120,11 @@ public class CheckoutService {
                                     .build()
                     )
                     .setProduct(productId)
+                    .putMetadata("type",paymentType)
                     .build();
             Price price = Price.create(priceParams);
 
-            // Create a checkout session for the subscription
+            logger.info("Requested to create the Session for Subscription");
             SessionCreateParams sessionParams = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
                     .setCustomer(user.getCustomerId())
@@ -138,7 +135,9 @@ public class CheckoutService {
                                     .setQuantity(1L)
                                     .setPrice(price.getId())
                                     .build()
-                    ).build();
+                    )
+                    .putMetadata("type",paymentType)
+                    .build();
 
             RequestOptions requestOptions = RequestOptions.builder()
                     .setIdempotencyKey(idempotencyKey)
@@ -164,44 +163,45 @@ public class CheckoutService {
         return responseData;
     }
 
-    // Fallback when retry attempts are exhausted
     @Recover
     public Session recover(ApiConnectionException e) {
-        // Handle connection failure, possibly log and notify the user
         logger.error("Unable to connect to Stripe after retries: " + e.getMessage(),e);
         throw new RuntimeException("Unable to connect to Stripe after retries: " + e.getMessage());
     }
 
-    public ResponseEntity<String> deleteSubscription(String subscriptionId){
-        // Retrieve the subscription
-        Subscription resource = null;
-        try {
-            resource = Subscription.retrieve(subscriptionId);
-        } catch (StripeException e) {
-            throw new RuntimeException(e.getMessage());
-        }
-
-        // Cancel the subscription
-        SubscriptionCancelParams params = SubscriptionCancelParams.builder().build();
+    public void deleteSubscription(String subscriptionId){
         Subscription subscription = null;
         try {
-            subscription = resource.cancel(params);
+            subscription = Subscription.retrieve(subscriptionId);
         } catch (StripeException e) {
             throw new RuntimeException(e.getMessage());
         }
+        Map<String,Object>updateParams=new HashMap<>();
+        updateParams.put("cancel_at_period_end",true);
+        try {
+            subscription.update(updateParams);
+        } catch (StripeException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        logger.info("Requested to subscription cancelled At the end of the billing period!");
+    }
+    public void cancelSubscriptionAtPeriodEnd(String subscriptionId){
+        logger.info("Requested to confirm the one-time payment");
+        try {
+            Subscription subscription = Subscription.retrieve(subscriptionId);
+            if (subscription == null) {
+                logger.error("Failed to retrieve subscription with ID: {}", subscriptionId);
+                return;
+            }
+            Map<String, Object> updateParams = new HashMap<>();
+            updateParams.put("cancel_at_period_end", true);
+            subscription.update(updateParams);
 
-        // Retrieve the customer ID from the canceled subscription
-        String customerId = subscription.getCustomer();
-
-        // Update the insurance payment status to "cancelled"
-        InsurancePayment existingPayment = insurancePaymentRepository.findByCustomerAndSubscriptionId(customerId,subscriptionId);
-        if (existingPayment != null) {
-            existingPayment.setSubscription_Status("cancelled");
-            insurancePaymentService.updatePayment(existingPayment,subscriptionId);
-            return ResponseEntity.ok("Subscription and insurance payment status updated to cancelled.");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Insurance payment record not found.");
+            logger.info("Subscription {} is set to cancel at the end of the current billing period.", subscriptionId);
+        } catch (StripeException e) {
+            logger.error("StripeException occurred while canceling subscription {}: {}", subscriptionId, e.getMessage());
+        } catch (Exception e) {
+            logger.error("Exception occurred while canceling subscription {}: {}", subscriptionId, e.getMessage(), e);
         }
     }
-
 }

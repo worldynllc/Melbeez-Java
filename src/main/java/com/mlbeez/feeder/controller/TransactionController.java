@@ -1,6 +1,4 @@
 package com.mlbeez.feeder.controller;
-
-
 import com.mlbeez.feeder.model.Transactions;
 import com.mlbeez.feeder.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;

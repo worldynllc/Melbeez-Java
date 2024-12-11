@@ -15,6 +15,7 @@ public class User {
     @Column(columnDefinition = "bigint")
     private Long id;
 
+    @Column(unique = true)
     private String userId;
 
     private String customerId;

@@ -22,7 +22,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -86,7 +85,7 @@ public class CheckoutServiceTest {
         when(warrantyRepository.findByWarrantyId(anyString())).thenReturn(Optional.of(mockWarranty));
 
         // Mock InsurancePaymentRepository response
-        when(insurancePaymentRepository.findAllByProductId(anyString())).thenReturn(List.of());
+        when(insurancePaymentRepository.findByUserIdAndWarrantyId(anyString(),anyString()));
 
         // Mock Stripe interactions with static mocking
         try (MockedStatic<Session> mockedSession = mockStatic(Session.class);

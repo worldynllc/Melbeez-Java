@@ -2,19 +2,30 @@ package com.mlbeez.feeder.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.time.LocalDateTime;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.time.ZonedDateTime;
+
 import jakarta.persistence.*;
+import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.hateoas.RepresentationModel;
 
+
 @Entity
+@Getter
 @Table(name = "feeds")
-public class Feed extends RepresentationModel<Feed> {
+public class Feed extends RepresentationModel<Feed>implements Serializable {
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(columnDefinition = "bigint")
-
     private Long id;
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
 //	private String title;
     @JsonInclude(JsonInclude.Include.ALWAYS)
@@ -24,26 +35,32 @@ public class Feed extends RepresentationModel<Feed> {
     private String author;
     private String description;
 
+    @Column(name = "comment_count")
+    private Integer commentCount;
+
+    public void setLikesCount(Integer likesCount) {
+        this.likesCount = likesCount;
+    }
+
+    @Column(name = "likes_count")
+    private Integer likesCount;
+
+    public void setCommentCount(Integer commentCount) {
+        this.commentCount = commentCount;
+    }
+
 
     //	private String category;
 //	private String tags;
     private String img;
 
     @CreationTimestamp
-    @Column(name = "created_at")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt;
+    @Column(name = "created_at",columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ssXXX")
+    private ZonedDateTime createdAt;
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(ZonedDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public void setId(Long id) {
@@ -58,26 +75,14 @@ public class Feed extends RepresentationModel<Feed> {
 //		this.title = title;
 //	}
 
-    public String getLink() {
-        return link;
-    }
-
     public void setLink(String link) {
         this.link = link;
-    }
-
-    public String getDescription() {
-        return description;
     }
 
     public void setDescription(String description) {
         this.description = description;
     }
 
-
-    public String getAuthor() {
-        return author;
-    }
 
     public void setAuthor(String author) {
         this.author = author;
@@ -101,10 +106,6 @@ public class Feed extends RepresentationModel<Feed> {
 //	public void setTags(String tags) {
 //		this.tags = tags;
 //	}
-
-    public String getImg() {
-        return img;
-    }
 
     public void setImg(String img) {
         this.img = img;

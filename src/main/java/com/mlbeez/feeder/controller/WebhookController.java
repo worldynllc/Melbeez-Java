@@ -1,6 +1,7 @@
 package com.mlbeez.feeder.controller;
 
 import com.google.gson.JsonSyntaxException;
+import com.mlbeez.feeder.service.InvoicePaymentFailedService;
 import com.mlbeez.feeder.service.WebhookService;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
@@ -25,6 +26,9 @@ public class WebhookController {
     @Autowired
     private WebhookService webhookService;
 
+    @Autowired
+    private InvoicePaymentFailedService invoicePaymentFailedService;
+
     private static final Logger logger = LoggerFactory.getLogger(WebhookController.class);
 
     @PostMapping("/webhook")
@@ -41,13 +45,13 @@ public class WebhookController {
                     payload, sigHeader, endpointSecret
             );
         } catch (SignatureVerificationException e) {
-            logger.error("Signature verification failed for payload: {} and signature header: {}", payload, sigHeader, e);
+            logger.error("Signature verification failed for payload: {} and signature header: {}", payload, sigHeader);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid signature");
         } catch (JsonSyntaxException e) {
             logger.error("Invalid JSON syntax in payload: {}", payload, e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid JSON syntax");
         } catch (Exception e) {
-            logger.error("Internal server error while processing webhook: {}", e.getMessage(), e);
+            logger.error("Internal server error while processing webhook: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
         }
 
@@ -55,15 +59,26 @@ public class WebhookController {
             case "checkout.session.completed":
                 handleCheckoutSessionCompleted(event);
                 break;
+            case "charge.succeeded":
+                handleChargeSucceeded(event);
+                break;
             case "invoice.payment_succeeded":
                 handleInvoicePaymentSucceeded(event);
                 break;
             case "invoice.payment_failed":
                 handleInvoicePaymentFailed(event);
                 break;
+            case "customer.subscription.deleted":
+                handleCustomerSubscriptionDeleted(event);
         }
 
         return ResponseEntity.ok("Webhook received");
+    }
+
+    private void handleChargeSucceeded(Event event) {
+        logger.info("Requested to handleChargeSucceeded");
+        Charge charge= (Charge) event.getDataObjectDeserializer().getObject().orElse(null);
+        webhookService.handleChargeSucceeded(charge);
     }
 
     private void handleCheckoutSessionCompleted(Event event){
@@ -81,7 +96,14 @@ public class WebhookController {
     private void handleInvoicePaymentFailed(Event event) throws StripeException {
         logger.info("Requested to handleInvoicePaymentFailed");
         Invoice invoice = (Invoice) event.getDataObjectDeserializer().getObject().orElse(null);
-        webhookService.handleInvoicePaymentFailed(invoice);
+        invoicePaymentFailedService.handleInvoicePaymentFailed(invoice);
     }
 
+    private void handleCustomerSubscriptionDeleted(Event event){
+        logger.info("Requested to handleCustomerSubscriptionDeleted");
+        Subscription subscription=(Subscription) event.getDataObjectDeserializer().getObject().orElse(null);
+        if (subscription != null) {
+            webhookService.handleCustomerSubscriptionDeleted(subscription);
+        }
+    }
 }

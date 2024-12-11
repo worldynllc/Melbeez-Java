@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
@@ -38,6 +37,7 @@ public class WarrantyService {
         String extension = (partStrings.length > 1) ? partStrings[1] : "";
         file = UUID.randomUUID().toString() + "." + extension;
         String message = "";
+        String folderName="Admin-Warranty";
         Map<String, String> metadata = new HashMap<>();
 
         metadata.put("vendor", warranty.getVendor());
@@ -50,26 +50,26 @@ public class WarrantyService {
         metadata.put("monthlyPrice",warranty.getMonthlyPrice());
 
         try {
-            String s = mediaStoreService.getMediaStoreService().uploadFile(file, multipart.getInputStream());
+            String s = mediaStoreService.getMediaStoreService().uploadFile(file, multipart.getInputStream(),folderName);
             if (multipart.isEmpty()) {
                 warranty.setPictureName("");
                 warranty.setPicture("");
                 warranty.setPictureLink("");
-                warranty.getCreatedAt();
-                warrantyRepository.save(warranty);
                 message = "Your file has been uploaded successfully! here ";
             } else {
                 warranty.setPictureName(fileName);
                 warranty.setPicture(file);
                 warranty.setPictureLink(s);
-                warrantyRepository.save(warranty);
                 message = "Your file has been uploaded successfully! here " + s;
             }
+            warranty.setUpdated_by("");
+
         } catch (Exception ex) {
             logger.error("Error uploading file: " + ex.getMessage(),ex);
             message = "Error uploading file: " + ex.getMessage();
         }
 
+        logger.info("Requested to create the productId for particular warranty in stripe");
         ProductCreateParams productParams = ProductCreateParams.builder()
                 .setName(warranty.getName())
                 .setDescription(warranty.getPlanDescription())
@@ -102,14 +102,13 @@ public class WarrantyService {
             }
 
         }
-        catch (Exception e){
-            logger.error("Internal error occurred while retrieving warranty",e);
-            throw new InternalServerException("Internal error occurred while retrieving warranty with id: "+ id, e);
+        catch (InternalServerException e){
+            logger.error("Internal error occurred while retrieving warranty {}",e.getMessage());
+            throw new InternalServerException("Internal error occurred while retrieving warranty with id: ");
         }
 
     }
 
-    @Transactional(readOnly = true)
     public List<Warranty> getWarranty() {
         try{
             List<Warranty> warranty = warrantyRepository.findAll();
@@ -127,7 +126,7 @@ public class WarrantyService {
         }
         catch (Exception e){
             logger.error("Internal error occurred while retrieving warranty");
-            throw new InternalServerException("Internal error occurred while retrieving warranty",e);
+            throw new InternalServerException("Internal error occurred while retrieving warranty");
         }
 
     }

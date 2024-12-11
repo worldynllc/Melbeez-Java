@@ -1,6 +1,4 @@
 package com.mlbeez.feeder.model;
-
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -10,7 +8,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.hateoas.RepresentationModel;
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 
@@ -86,8 +84,9 @@ public class Warranty extends RepresentationModel<Warranty> implements Serializa
     private String pictureLink;
 
     @UpdateTimestamp
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime updatedAt;
+    @Column(name = "updated_at",columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ssXXX")
+    private ZonedDateTime updatedAt;
 
     public void setPlanName(String planName) {
         this.planName = planName;
@@ -101,7 +100,7 @@ public class Warranty extends RepresentationModel<Warranty> implements Serializa
         this.pictureName = pictureName;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    public void setUpdatedAt(ZonedDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
@@ -118,8 +117,9 @@ public class Warranty extends RepresentationModel<Warranty> implements Serializa
     private String updated_by;
 
     @CreationTimestamp
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt;
+    @Column(name = "created_at",columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ssXXX")
+    private ZonedDateTime createdAt;
 
 
     public void setPicture(String picture) {
@@ -159,7 +159,7 @@ public class Warranty extends RepresentationModel<Warranty> implements Serializa
         this.updated_by = updated_by;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(ZonedDateTime createdAt) {
         this.createdAt = createdAt;
     }
 

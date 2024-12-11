@@ -35,8 +35,9 @@ public class StripeController {
 
 
     @DeleteMapping("subscriptions/{id}")
-    public ResponseEntity<String> cancelSubscription(@PathVariable("id") String id) {
-      return checkoutService.deleteSubscription(id);
+    public void cancelSubscription(@PathVariable("id") String id) {
+        logger.info("Requested to cancel subscription");
+       checkoutService.deleteSubscription(id);
     }
 
 }

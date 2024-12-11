@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.AtomicReference;
 @Service("awss3")
 public class S3Service implements IMediaStore {
 
-	//It can be fetched form Database for each user
 	@Value("${aws.s3.bucket}")
 	String bucket;
 
@@ -58,26 +57,25 @@ public class S3Service implements IMediaStore {
 		};
 	}
 
-	public String uploadFile(String filename, InputStream inputStream)
+	public String uploadFile(String filename, InputStream inputStream,String folderName)
 			throws  IOException {
-		
-		//Needs to put it as a singletop, one client instance is good for connection S3
+		String key=folderName + "/" + filename;
 		S3Client client = S3Client.builder().credentialsProvider(getCredentialsProvider()).build();
 		PutObjectRequest request = PutObjectRequest.builder()
 										.bucket(bucket)
-										.key(filename)
+										.key(key)
 										.acl("public-read")
 										.build();
 		client.putObject(request, RequestBody.fromInputStream(inputStream, inputStream.available()));
 		S3Waiter waiter = client.waiter();
 		HeadObjectRequest waitRequest = HeadObjectRequest.builder()
 											.bucket(bucket)
-											.key(filename)
+											.key(key)
 											.build();
 		WaiterResponse<HeadObjectResponse> waitResponse = waiter.waitUntilObjectExists(waitRequest);
 		AtomicReference<String> url = new AtomicReference<>("");
 		waitResponse.matched().response().ifPresent(x -> {
-			url.set(client.utilities().getUrl(GetUrlRequest.builder().bucket(bucket ).key(filename).build()).toExternalForm());
+			url.set(client.utilities().getUrl(GetUrlRequest.builder().bucket(bucket ).key(key).build()).toExternalForm());
 		});
 		return url.get();
 	}
@@ -109,8 +107,7 @@ public class S3Service implements IMediaStore {
 		do {
 			listResponse = client.listObjectsV2(listRequest);
 			listResponse.contents().forEach(object -> {
-				// Add the key to the list if it's an image file
-				if (object.key().toLowerCase().endsWith(".jpeg") || object.key().toLowerCase().endsWith(".jpg") || object.key().toLowerCase().endsWith(".png"))
+				if (object.key().toLowerCase().endsWith(".jpeg") || object.key().toLowerCase().endsWith(".jpg") || object.key().toLowerCase().endsWith(".png") || object.key().toLowerCase().endsWith(".mp4"))
 				{
 					imageKeys.add(object.key());
 				}

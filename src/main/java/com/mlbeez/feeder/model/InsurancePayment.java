@@ -1,12 +1,10 @@
 package com.mlbeez.feeder.model;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name ="InsurancePayments")
@@ -44,6 +42,8 @@ public class InsurancePayment {
 
     private String mode;
 
+    private String subscriptionMode;
+
     private String default_payment_method;
 
     private String chargeRequest_status;
@@ -55,9 +55,9 @@ public class InsurancePayment {
 
 
     @CreationTimestamp
-    @Column(name = "created_at")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt;
+    @Column(name = "created_at",columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ssXXX")
+    private ZonedDateTime createdAt;
 
 
 }

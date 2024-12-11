@@ -46,6 +46,29 @@
             <appender-ref ref="file"/>
         </logger>
 
+        <logger name="com.mlbeez.feeder.service.CheckoutService" level="INFO" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="file"/>
+        </logger>
+        <logger name="com.mlbeez.feeder.service.WebhookService" level="INFO" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="file"/>
+        </logger>
+
+        <logger name="com.mlbeez.feeder.service.UserService" level="INFO" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="file"/>
+        </logger>
+
+        <logger name="com.mlbeez.feeder.service.WarrantyService" level="INFO" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="file"/>
+        </logger>
+        <logger name="com.mlbeez.feeder.service.InsurancePaymentService" level="INFO" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="file"/>
+        </logger>
+
         <!-- Specific package logger for controller -->
         <logger name="com.mlbeez.feeder.controller" level="INFO" additivity="false">
             <appender-ref ref="console"/>
