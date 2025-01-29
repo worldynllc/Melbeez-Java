@@ -9,11 +9,16 @@ import com.mlbeez.feeder.service.exception.InternalServerException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Product;
 import com.stripe.param.ProductCreateParams;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,9 +54,11 @@ public class WarrantyService {
         metadata.put("discount", warranty.getDiscount());
         metadata.put("monthlyPrice",warranty.getMonthlyPrice());
 
+        metadata.entrySet().removeIf(entry -> entry.getValue() == null);
         try {
             String s = mediaStoreService.getMediaStoreService().uploadFile(file, multipart.getInputStream(),folderName);
             if (multipart.isEmpty()) {
+                warranty.setPictureName("");
                 warranty.setPictureName("");
                 warranty.setPicture("");
                 warranty.setPictureLink("");
@@ -67,6 +74,10 @@ public class WarrantyService {
         } catch (Exception ex) {
             logger.error("Error uploading file: " + ex.getMessage(),ex);
             message = "Error uploading file: " + ex.getMessage();
+        }
+
+        if (warranty.getName() == null || warranty.getPlanDescription() == null) {
+            throw new IllegalArgumentException("Warranty name and plan description must not be null.");
         }
 
         logger.info("Requested to create the productId for particular warranty in stripe");
@@ -88,25 +99,46 @@ public class WarrantyService {
             logger.error("Required warranty Id");
         }
         try{
-
             assert id != null;
-            Optional<Warranty> optionalWarranty = warrantyRepository.findById(id);
-            if (optionalWarranty.isPresent()) {
-                Warranty warranty = optionalWarranty.get();
-                if (!warranty.getPicture().isEmpty()) {
-                    mediaStoreService.getMediaStoreService().deleteFile(warranty.getPicture());
-                }
-                warrantyRepository.deleteById(id);
-            } else {
-                logger.error("Warranty not found with id: " + id);
-            }
 
+            Optional<Warranty> optionalWarranty = warrantyRepository.findById(id);
+            if (optionalWarranty.isEmpty()) {
+                logger.error("Warranty not found with id: {}", id);
+                throw new EntityNotFoundException("Warranty not found with id: " + id);
+            }
+            Warranty warranty = optionalWarranty.get();
+
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String currentAdminName = authentication.getName();
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String userRole = userDetails.getAuthorities().toString();
+
+            String[] partString = currentAdminName.split("_");
+            String name = partString[0];
+
+            String[] SuperAdminPart = userRole.split("_");
+            String split = SuperAdminPart[1];
+            String tokenUserRole = split.substring(0, split.length() - 1);
+
+                if(!warranty.getName().equals(name) || tokenUserRole.equals("SUPERADMIN") ){
+                    deleteWarranty(warranty,id);
+                    logger.info("Warranty deleted successfully");
+                }
+                else {
+                    throw new AccessDeniedException("You are not authorized to delete this warranty");
+                }
         }
         catch (InternalServerException e){
             logger.error("Internal error occurred while retrieving warranty {}",e.getMessage());
             throw new InternalServerException("Internal error occurred while retrieving warranty with id: ");
         }
+    }
 
+    public void deleteWarranty(Warranty warranty,Long id) {
+        if (warranty.getPicture()!=null && !warranty.getPicture().isEmpty()) {
+            mediaStoreService.getMediaStoreService().deleteFile(warranty.getPicture());
+        }
+        warrantyRepository.deleteById(id);
     }
 
     public List<Warranty> getWarranty() {
@@ -124,11 +156,13 @@ public class WarrantyService {
             }
             return warranty;
         }
+        catch (DataNotFoundException e){
+            throw e;
+        }
         catch (Exception e){
             logger.error("Internal error occurred while retrieving warranty");
             throw new InternalServerException("Internal error occurred while retrieving warranty");
         }
-
     }
 
     public List<Warranty> getPendingWarranties() {

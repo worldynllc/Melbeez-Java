@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @Repository
 public interface WarrantyRepository extends JpaRepository<Warranty, Long> {
+
     List<Warranty> findByStatus(String status);
 
     Optional<Warranty> findByWarrantyId(String warrantyId);

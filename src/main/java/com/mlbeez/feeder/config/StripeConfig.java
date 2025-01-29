@@ -15,4 +15,8 @@ public class StripeConfig {
     public void init() {
         Stripe.apiKey = apiKey;
     }
+
+    public String getApiKey() {
+        return Stripe.apiKey;
+    }
 }

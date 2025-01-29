@@ -1,14 +1,17 @@
-package com.mlbeez.feeder.service;
+package com.mlbeez.feeder.errorlogservice;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.mlbeez.feeder.model.PaymentFailed;
-import com.mlbeez.feeder.model.TransactionDto;
-import com.mlbeez.feeder.model.Transactions;
-import com.mlbeez.feeder.model.User;
-import com.mlbeez.feeder.repository.CardDetailsRepository;
-import com.mlbeez.feeder.repository.UserRepository;
+import com.mlbeez.feeder.model.*;
+import com.mlbeez.feeder.repository.AspNetUserRepository;
+
+import com.mlbeez.feeder.repository.CustomerRepository;
+
+import com.mlbeez.feeder.service.PaymentFailedService;
+import com.mlbeez.feeder.service.TransactionService;
+import com.mlbeez.feeder.service.WebhookService;
+import com.mlbeez.feeder.service.exception.DataNotFoundException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Charge;
 import com.stripe.model.Invoice;
@@ -22,14 +25,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class InvoicePaymentFailedService {
 
-    @Autowired
-    private UserRepository userRepository;
 
     @Autowired
     private PaymentFailedService paymentFailedService;
 
     @Autowired
-    private CardDetailsRepository cardDetailsRepository;
+    private CustomerRepository customerRepository;
+
+    @Autowired
+    private AspNetUserRepository aspNetUserRepository;
 
     @Autowired
     private TransactionService transactionService;
@@ -44,11 +48,14 @@ public class InvoicePaymentFailedService {
             logger.error("Invoice is null in invoice.payment_failed event");
             return;
         }
-        User userDetail = userRepository.findByCustomerId(invoice.getCustomer());
-        if (userDetail == null) {
-            logger.error("User not found for customerId: {}", invoice.getCustomer());
+        Customers customers= customerRepository.findByCustomerId(invoice.getCustomer());
+
+        if (customers == null) {
+            logger.error("User not found for customerId: {}", customers);
             return;
         }
+        UserResponseBaseModel userDetail=aspNetUserRepository.findById(customers.getUserId()).orElseThrow(()->new DataNotFoundException("Data not found!"));
+
         Charge charge = Charge.retrieve(invoice.getCharge());
         try {
             PaymentFailed paymentFailed = new PaymentFailed();
@@ -69,7 +76,7 @@ public class InvoicePaymentFailedService {
         if (charge.getPaymentMethod() != null) {
             PaymentMethod paymentMethod = retrievePaymentMethod(charge.getPaymentMethod());
             if (paymentMethod != null) {
-                webhookService. saveCardDetails(paymentMethod, userDetail);
+                webhookService. saveCardDetails(paymentMethod, userDetail, customers.getCustomerId());
                 String productId = invoice.getLines().getData().get(0).getPlan().getProduct();
 
                 Product product = Product.retrieve(productId);
@@ -77,7 +84,7 @@ public class InvoicePaymentFailedService {
                 try{
                     if (paymentMethod.getId() != null) {
                         Transactions transaction = new Transactions();
-                        transaction.setUserId(userDetail.getUserId());
+                        transaction.setUserId(userDetail.getId());
                         transaction.setProductName(product.getName());
                         transaction.setCard(paymentMethod.getCard().getLast4());
                         transaction.setPrice(invoice.getLines().getData().get(0).getPlan().getAmount());

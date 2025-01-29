@@ -17,22 +17,23 @@ public class TransactionService {
     @Autowired
     private TransactionRepository transactionRepository;
 
-    private static final Logger logger= LoggerFactory.getLogger(TransactionService.class);
+    private static final Logger logger = LoggerFactory.getLogger(TransactionService.class);
 
-    public void storeHistory(Transactions transcations)
-    {
-         transactionRepository.save(transcations);
+    public void storeHistory(Transactions transcations) {
+        transactionRepository.save(transcations);
     }
 
-    public List<Transactions> getData(String userId)
-    {
-        if(!userId.isEmpty()) {
+    public List<Transactions> getData(String userId) {
+        if (!userId.isEmpty()) {
             return transactionRepository.findByUserId(userId);
-        }
-        else {
-            logger.error("userId not found :"+userId);
-            throw new DataNotFoundException("userId not found :"+userId);
+        } else {
+            logger.error("userId not found :" + userId);
+            throw new DataNotFoundException("userId not found :" + userId);
         }
 
+    }
+
+    public List<Transactions> getAll() {
+        return transactionRepository.findAll();
     }
 }

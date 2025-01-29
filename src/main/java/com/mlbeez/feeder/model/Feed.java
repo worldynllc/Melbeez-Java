@@ -24,6 +24,13 @@ public class Feed extends RepresentationModel<Feed>implements Serializable {
     @Column(columnDefinition = "bigint")
     private Long id;
 
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    private String userId;
+
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -33,6 +40,7 @@ public class Feed extends RepresentationModel<Feed>implements Serializable {
 
 
     private String author;
+
     private String description;
 
     @Column(name = "comment_count")
