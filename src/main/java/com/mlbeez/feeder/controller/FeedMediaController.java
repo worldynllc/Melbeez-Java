@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,13 +16,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 @Controller
+@RequestMapping("/feed")
 public class FeedMediaController {
 
     @Autowired
     FeedService feedService;
-
-    @Autowired
-    private FeedRepository feedRepository;
 
     public static final Logger logger= LoggerFactory.getLogger(FeedMediaController.class);
 
@@ -31,6 +30,7 @@ public class FeedMediaController {
     }
     @Operation(summary = "Upload a new Feed")
     @PostMapping(value = "/upload", consumes = {"multipart/form-data"})
+    @PreAuthorize("hasAnyRole('ADMIN','USER','SUPERADMIN')")
     public ResponseEntity<String> handleUpload(Feed feed, @RequestPart("file")MultipartFile file) {
         logger.info("Request to Upload Feed {}", feed);
         return feedService.createFeed(feed, file);

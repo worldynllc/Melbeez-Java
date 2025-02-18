@@ -1,15 +1,22 @@
 package com.mlbeez.feeder.model;
 
 public class LikeResponse {
+    private Feed feed;  // Renamed for clarity
+    private String userId;
+    private String userName;
 
-    private Feed feedId;
-
-    public Feed getFeedId() {
-        return feedId;
+    public LikeResponse(String userName, String userId, Feed feed) {
+        this.userName = userName;
+        this.userId = userId;
+        this.feed = feed;
     }
 
-    public void setFeedId(Feed feedId) {
-        this.feedId = feedId;
+    public Feed getFeed() {
+        return feed;
+    }
+
+    public void setFeed(Feed feed) {
+        this.feed = feed;
     }
 
     public String getUserId() {
@@ -20,14 +27,6 @@ public class LikeResponse {
         this.userId = userId;
     }
 
-    private String userId;
-
-    public LikeResponse(String userName,String userId,Feed feedId) {
-        this.userName = userName;
-        this.userId=userId;
-        this.feedId=feedId;
-    }
-
     public String getUserName() {
         return userName;
     }
@@ -35,8 +34,5 @@ public class LikeResponse {
     public void setUserName(String userName) {
         this.userName = userName;
     }
-
-    private String userName;
-
-
 }
+

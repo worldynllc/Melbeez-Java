@@ -4,7 +4,7 @@ import com.mlbeez.feeder.service.CheckoutService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +20,7 @@ public class StripeController {
     private static final Logger logger= LoggerFactory.getLogger(StripeController.class);
 
     @PostMapping("/create-checkout-session")
+    @PreAuthorize("hasAnyRole('USER','SUPERADMIN')")
     public Map<String, String> createCheckoutSession(@RequestBody Map<String, String> Details) {
         logger.info("Requested to create stripe checkout page");
         Map<String, String> responseData = new HashMap<>();
@@ -35,6 +36,7 @@ public class StripeController {
 
 
     @DeleteMapping("subscriptions/{id}")
+    @PreAuthorize("hasAnyRole('USER','ADMIN','SUPERADMIN')")
     public void cancelSubscription(@PathVariable("id") String id) {
         logger.info("Requested to cancel subscription");
        checkoutService.deleteSubscription(id);

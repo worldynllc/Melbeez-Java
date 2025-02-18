@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
 
 
 @Getter
@@ -24,7 +25,7 @@ public class WarrantyDto implements Serializable {
     private String annualPrice;
     private Integer discount;
     private String planName;
-    private String product_price_ids;
+    private List<String> product_price_ids;
     private String other_Details;
     private String planDescription;
     private String updated_by;

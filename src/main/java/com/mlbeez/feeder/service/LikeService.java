@@ -26,14 +26,16 @@ public class LikeService {
     @Autowired
     private FeedRepository feedRepository;
 
-    private final Logger logger= LoggerFactory.getLogger(LikeService.class);
+    private final Logger logger = LoggerFactory.getLogger(LikeService.class);
 
     @Transactional
-    public synchronized void addLike(Long feedId, String userId,String userName) {
+    public synchronized Feed addLike(Long feedId, String userId, String userName) {
+        Feed response = null;
+        Feed likeResponse;
         try {
 
-            if(userId.equals("null") || userId.equals("undefined")){
-                return;
+            if (userId.equals("null") || userId.equals("undefined")) {
+                throw new DataNotFoundException("");
             }
 
             Feed feed = feedRepository.findById(feedId)
@@ -43,36 +45,45 @@ public class LikeService {
             Optional<Like> existingLike = likeRepository.findByFeedAndUserId(feed, userId);
 
             if (existingLike.isPresent()) {
-
-                likeRepository.deleteById(existingLike.get().getId());
-                feed.setLikesCount(feed.getLikesCount() - 1);
+                likeResponse = unlikeFeed(feed, existingLike);
             } else {
-
-                Like newLike = new Like();
-                newLike.setFeed(feed);
-                newLike.setUserId(userId);
-                newLike.setUserName(userName);
-                likeRepository.save(newLike);
-                feed.setLikesCount(feed.getLikesCount() + 1);
+                likeResponse = likeFeed(feed, userId, userName);
             }
-            feedRepository.save(feed);
-        }
-        catch (ConstraintViolationException e){
+            response = likeResponse;
+        } catch (ConstraintViolationException e) {
             logger.error("Duplicate like detected: {}", e.getMessage());
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             logger.error(e.getMessage());
         }
+        return response;
     }
 
-    public List<Like> getAllLikes(){
+    public Feed likeFeed(Feed feed, String userId, String userName) {
+        Like newLike = new Like();
+        newLike.setFeed(feed);
+        newLike.setUserId(userId);
+        newLike.setUserName(userName);
+        likeRepository.save(newLike);
+        feed.setLikesCount(feed.getLikesCount() + 1);
+        return feedRepository.save(feed);
+    }
+
+    public Feed unlikeFeed(Feed feed, Optional<Like> like) {
+        if (like.isPresent()) {
+            likeRepository.deleteById(like.get().getId());
+            feed.setLikesCount(feed.getLikesCount() - 1);
+        }
+        return feedRepository.save(feed);
+    }
+
+    public List<Like> getAllLikes() {
         return likeRepository.findAll();
     }
 
-    public List<LikeResponse> getLikes(Long feedId){
-        Optional<Feed> feed=feedRepository.findById(feedId);
-        return likeRepository.findByFeed(feed).stream().map(like->new LikeResponse(like.getUserName(),
-                like.getUserId(),like.getFeed())).collect(Collectors.toList());
+    public List<LikeResponse> getLikes(Long feedId) {
+        Optional<Feed> feed = feedRepository.findById(feedId);
+        return likeRepository.findByFeed(feed).stream().map(like -> new LikeResponse(like.getUserName(),
+                like.getUserId(), like.getFeed())).collect(Collectors.toList());
     }
 
 }

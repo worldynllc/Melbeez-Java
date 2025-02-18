@@ -13,6 +13,17 @@ public class Like {
     @Column(columnDefinition = "bigint")
     private Long id;
 
+    @Version
+    private Integer version;
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
+
     @CreationTimestamp
     @Column(name = "created_at",columnDefinition = "TIMESTAMP WITH TIME ZONE")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ssXXX")
@@ -26,7 +37,7 @@ public class Like {
 
 
     @ManyToOne
-    @JoinColumn(name = "feed_id", referencedColumnName = "id")
+    @JoinColumn(name = "feed_id", referencedColumnName = "id",nullable = false)
     private Feed feed;
 
     public String getUserId() {

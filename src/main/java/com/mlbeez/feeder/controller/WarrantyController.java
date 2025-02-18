@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
@@ -31,6 +32,7 @@ public class WarrantyController {
 
     @Operation(summary = "Upload a new warranty")
     @PostMapping(value = "/upload", consumes = {"multipart/form-data"})
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN')")
     public String warrantyUpload(Warranty warranty, @RequestPart("file") MultipartFile multipart)throws StripeException {
         logger.info("Request to Upload Warranty {}", warranty);
         return warrantyService.createWarranty(warranty, multipart);
@@ -38,6 +40,7 @@ public class WarrantyController {
 
     @Operation(summary = "Delete a warranty by ID")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN')")
     public void deleteWarrantyById(@PathVariable("id") Long id) {
         logger.info("Request to Delete Warranty {}", id);
         warrantyService.deleteWarrantyById(id);
@@ -45,6 +48,7 @@ public class WarrantyController {
 
     @Operation(summary = "Get all pending warranties")
     @GetMapping("/pending")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN')")
     public List<Warranty> getPending() {
         logger.info("Request to GetAll Pending Warranty");
         return warrantyService.getPendingWarranties();
@@ -52,13 +56,15 @@ public class WarrantyController {
 
     @Operation(summary = "Get all warranties")
     @GetMapping("/all")
-    public List<Warranty> getWarrantyAll( ) {
+    @PreAuthorize("hasAnyRole('ADMIN','USER','SUPERADMIN')")
+    public List<Warranty> getWarrantyAll() {
         logger.info("Request to GetAll Warranty");
         return warrantyService.getWarranty();
     }
 
     @Operation(summary = "Get a warranty by ID")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','USER','SUPERADMIN')")
     public ResponseEntity<Warranty> getWarrantyById(@PathVariable String id) {
         Optional<Warranty> warranty = warrantyRepository.findByWarrantyId(id);
         return warranty.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
@@ -66,6 +72,7 @@ public class WarrantyController {
 
     @Operation(summary = "Update a warranty by ID")
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN')")
     public ResponseEntity<Warranty> updateWarranty(@PathVariable Long id, @RequestBody UpdateWarrantyRequest request) {
         logger.info("Request to Update Warranty {}",request);
         Optional<Warranty> result = warrantyService.updateWarranty(id, request);

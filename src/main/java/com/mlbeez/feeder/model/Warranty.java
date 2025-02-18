@@ -22,6 +22,8 @@ public class Warranty extends RepresentationModel<Warranty> implements Serializa
     @Column(columnDefinition = "bigint")
     private Long id;
 
+    private String userId;
+
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -162,6 +164,5 @@ public class Warranty extends RepresentationModel<Warranty> implements Serializa
     public void setCreatedAt(ZonedDateTime createdAt) {
         this.createdAt = createdAt;
     }
-
 
 }

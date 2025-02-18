@@ -2,7 +2,6 @@ package com.mlbeez.feeder.service;
 
 import com.mlbeez.feeder.model.Comment;
 import com.mlbeez.feeder.model.CommentResponse;
-
 import java.util.List;
 
 public interface CommentService {

@@ -1,7 +1,7 @@
 package com.mlbeez.feeder.controller;
 
 import com.google.gson.JsonSyntaxException;
-import com.mlbeez.feeder.service.InvoicePaymentFailedService;
+import com.mlbeez.feeder.errorlogservice.InvoicePaymentFailedService;
 import com.mlbeez.feeder.service.WebhookService;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
