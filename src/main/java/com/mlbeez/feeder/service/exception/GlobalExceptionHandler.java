@@ -49,4 +49,8 @@ public class GlobalExceptionHandler {
         logger.error("File too large! Maximum upload size is 50MB.{}",exc.getMessage());
         return ResponseEntity.badRequest().body("File too large! Maximum upload size is 50MB.");
     }
+    @ExceptionHandler(RateLimitException.class)
+    public ResponseEntity<String> handleRateLimit(RateLimitException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(ex.getMessage());
+    }
 }

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
@@ -53,6 +54,7 @@ public class FeedService {
         this.uuidGenerator = uuidGenerator;
     }
 
+    @Transactional
     public ResponseEntity<String> createFeed(Feed feed, MultipartFile multipart) {
         String fileName = multipart.getOriginalFilename();
         assert fileName != null;
@@ -93,7 +95,7 @@ public class FeedService {
         if (size == 0) {
             throw new IllegalArgumentPassedException("Page size must not be less than one");
         }
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Feed> feedPage = feedRepository.findAll(pageable);
         List<Feed> feeds = feedPage.getContent();
 

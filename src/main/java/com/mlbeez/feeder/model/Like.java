@@ -6,7 +6,10 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.ZonedDateTime;
 
 @Entity
-@Table(name = "likes", uniqueConstraints = @UniqueConstraint(columnNames = {"feed_id", "user_id"}))
+@Table(name = "likes", uniqueConstraints = @UniqueConstraint(columnNames = {"feed_id", "user_id"}),indexes = {
+        @Index(name = "idx_feed_user", columnList = "feed_id, user_id"),
+        @Index(name = "idx_user_id", columnList = "user_id")
+})
 public class Like {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -36,8 +39,8 @@ public class Like {
     }
 
 
-    @ManyToOne
-    @JoinColumn(name = "feed_id", referencedColumnName = "id",nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "feed_id", nullable = false)
     private Feed feed;
 
     public String getUserId() {

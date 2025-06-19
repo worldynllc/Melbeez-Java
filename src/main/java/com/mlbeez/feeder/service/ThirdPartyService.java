@@ -19,10 +19,10 @@ public class ThirdPartyService {
     private final ObjectMapper objectMapper;
 
     @Value("${akko.api.uri}")
-    private  String akkoUri;
+    public String akkoUri;
 
     @Value("${akko.api.key}")
-    private  String akkoApiKey;
+    public String akkoApiKey;
 
     public ThirdPartyService(WebClient webClient, ObjectMapper objectMapper) {
         this.webClient = webClient;

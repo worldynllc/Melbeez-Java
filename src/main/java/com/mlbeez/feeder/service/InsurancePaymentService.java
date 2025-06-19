@@ -14,7 +14,7 @@ public class InsurancePaymentService {
     private static final Logger logger = LoggerFactory.getLogger(InsurancePaymentService.class);
 
     @Autowired
-    InsurancePaymentRepository insurancePaymentRepository;
+    private InsurancePaymentRepository insurancePaymentRepository;
 
     public void storePayment(InsurancePayment insurancePayment) {
         insurancePaymentRepository.save(insurancePayment);

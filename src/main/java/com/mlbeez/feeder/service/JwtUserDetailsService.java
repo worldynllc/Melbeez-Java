@@ -46,7 +46,11 @@ public class JwtUserDetailsService implements UserDetailsService {
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName().toUpperCase()));
 
-        return new User(userResponseBaseModel.getUsername(), userResponseBaseModel.getPasswordHash(), authorities);
+        String password = (userResponseBaseModel.getPasswordHash() != null && !userResponseBaseModel.getPasswordHash().isEmpty())
+                ? userResponseBaseModel.getPasswordHash()
+                : "DUMMY";
+
+        return new User(userResponseBaseModel.getUsername(), password, authorities);
     }
 
 }

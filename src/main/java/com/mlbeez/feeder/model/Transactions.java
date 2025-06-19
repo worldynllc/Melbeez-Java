@@ -26,6 +26,10 @@ public class Transactions {
 
     private Long price;
 
+    private String userName;
+
+    private String vendor;
+
     private String transactionId;
 
     private String card;
@@ -45,6 +49,7 @@ public class Transactions {
     @Column(name = "created_at",columnDefinition = "TIMESTAMP WITH TIME ZONE")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
+
 
     private String chargeRequest_status;
 
