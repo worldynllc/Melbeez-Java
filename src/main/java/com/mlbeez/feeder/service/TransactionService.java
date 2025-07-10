@@ -27,7 +27,7 @@ public class TransactionService {
         if (!userId.isEmpty()) {
             return transactionRepository.findByUserId(userId);
         } else {
-            logger.error("userId not found :" + userId);
+            logger.error("userId not found :{}", userId);
             throw new DataNotFoundException("userId not found :" + userId);
         }
 

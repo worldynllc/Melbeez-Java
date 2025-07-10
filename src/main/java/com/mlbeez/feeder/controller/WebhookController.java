@@ -2,6 +2,10 @@ package com.mlbeez.feeder.controller;
 
 import com.google.gson.JsonSyntaxException;
 import com.mlbeez.feeder.errorlogservice.InvoicePaymentFailedService;
+import com.mlbeez.feeder.model.CardDetails;
+import com.mlbeez.feeder.model.InsurancePayment;
+import com.mlbeez.feeder.model.PaymentFailed;
+import com.mlbeez.feeder.model.Transactions;
 import com.mlbeez.feeder.service.WebhookService;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
@@ -34,7 +38,9 @@ public class WebhookController {
     @PostMapping("/webhook")
     public ResponseEntity<String> handleStripeWebhook(
             @RequestBody String payload,
-            @RequestHeader("Stripe-Signature") String sigHeader) throws StripeException {
+            @RequestHeader("Stripe-Signature") String sigHeader, InsurancePayment insurancePayment, Transactions transactions, CardDetails cardDetails,
+            PaymentFailed paymentFailed
+            ) throws StripeException {
 
         logger.info("Requested to webhook listening");
 
@@ -60,13 +66,13 @@ public class WebhookController {
                 handleCheckoutSessionCompleted(event);
                 break;
             case "charge.succeeded":
-                handleChargeSucceeded(event);
+                handleChargeSucceeded(event,cardDetails);
                 break;
             case "invoice.payment_succeeded":
-                handleInvoicePaymentSucceeded(event);
+                handleInvoicePaymentSucceeded(event,insurancePayment,transactions);
                 break;
             case "invoice.payment_failed":
-                handleInvoicePaymentFailed(event);
+                handleInvoicePaymentFailed(event,cardDetails,paymentFailed,transactions);
                 break;
             case "customer.subscription.deleted":
                 handleCustomerSubscriptionDeleted(event);
@@ -75,10 +81,10 @@ public class WebhookController {
         return ResponseEntity.ok("Webhook received");
     }
 
-    private void handleChargeSucceeded(Event event) {
+    private void handleChargeSucceeded(Event event, CardDetails cardDetails) {
         logger.info("Requested to handleChargeSucceeded");
         Charge charge= (Charge) event.getDataObjectDeserializer().getObject().orElse(null);
-        webhookService.handleChargeSucceeded(charge);
+        webhookService.handleChargeSucceeded(charge,cardDetails);
     }
 
     private void handleCheckoutSessionCompleted(Event event){
@@ -87,16 +93,16 @@ public class WebhookController {
         webhookService.handleCheckoutSessionCompleted(session);
     }
 
-    private void handleInvoicePaymentSucceeded(Event event) {
+    private void handleInvoicePaymentSucceeded(Event event, InsurancePayment insurancePayment,Transactions transactions) {
         logger.info("Requested to handleInvoicePaymentSucceeded");
         Invoice invoice = (Invoice) event.getDataObjectDeserializer().getObject().orElse(null);
-        webhookService.handleInvoicePaymentSucceeded(invoice);
+        webhookService.handleInvoicePaymentSucceeded(invoice,insurancePayment,transactions);
     }
 
-    private void handleInvoicePaymentFailed(Event event) throws StripeException {
+    private void handleInvoicePaymentFailed(Event event, CardDetails cardDetails,PaymentFailed paymentFailed,Transactions transactions) throws StripeException {
         logger.info("Requested to handleInvoicePaymentFailed");
         Invoice invoice = (Invoice) event.getDataObjectDeserializer().getObject().orElse(null);
-        invoicePaymentFailedService.handleInvoicePaymentFailed(invoice);
+        invoicePaymentFailedService.handleInvoicePaymentFailed(invoice,cardDetails,paymentFailed,transactions);
     }
 
     private void handleCustomerSubscriptionDeleted(Event event){

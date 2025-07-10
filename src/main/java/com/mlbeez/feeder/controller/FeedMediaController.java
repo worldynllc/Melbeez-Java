@@ -1,7 +1,6 @@
 package com.mlbeez.feeder.controller;
 
 import com.mlbeez.feeder.model.Feed;
-import com.mlbeez.feeder.repository.FeedRepository;
 import com.mlbeez.feeder.service.FeedService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.slf4j.Logger;

@@ -61,13 +61,6 @@ public class FeedController {
         return ResponseEntity.ok(feed);
     }
 
-//    @GetMapping("/all/feeds")
-//    @PreAuthorize("hasAnyRole('ADMIN','USER','SUPERADMIN')")
-//    public List<Feed> getAllFeed() {
-//        logger.info("Request to GetAllFeeds");
-//        return feedRepository.findAll();
-//    }
-
     @Operation(summary = "Get file location by ID")
     @GetMapping("/file/{id}")
     public String handleGet(@PathVariable String id) {

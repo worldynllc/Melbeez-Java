@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -35,9 +36,6 @@ public class WebhookService {
     private InsurancePaymentService insurancePaymentService;
 
     @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
     private AspNetUserRepository aspNetUserRepository;
 
     @Autowired
@@ -56,7 +54,7 @@ public class WebhookService {
     @Autowired
     private CheckoutService checkoutService;
 
-    public void handleChargeSucceeded(Charge charge) {
+    public void handleChargeSucceeded(Charge charge, CardDetails cardDetails) {
 
         try {
 
@@ -64,23 +62,22 @@ public class WebhookService {
                 logger.error("Charge is null in charge.succeeded event");
                 return;
             }
-            String customerId = charge.getCustomer();
 
-            Customers customers = customerRepository.findByCustomerId(customerId);
+            Customer customer = Customer.retrieve(charge.getCustomer());
 
-            if (customers == null) {
-                logger.error("customerId not found: {}", customerId);
+            if (customer == null) {
+                logger.error("customerId not found");
                 return;
             }
-            UserResponseBaseModel userDetail = aspNetUserRepository.findById(customers.getUserId()).orElseThrow(() -> new DataNotFoundException("Data not found!"));
+            UserResponseBaseModel userDetail = aspNetUserRepository.findById(customer.getMetadata().get("userId")).orElseThrow(() -> new DataNotFoundException("Data not found!"));
 
             PaymentMethod paymentMethod;
 
             paymentMethod = PaymentMethod.retrieve(charge.getPaymentMethod());
             if (paymentMethod != null) {
-                saveCardDetails(paymentMethod, userDetail, customers.getCustomerId());
+                saveCardDetails(paymentMethod, userDetail, charge.getCustomer(), cardDetails);
             } else {
-                logger.error("Payment method is null for paymentMethodId: {}, paymentMethodId", customerId);
+                logger.error("Payment method is null for paymentMethodId: {}, paymentMethodId", customer);
             }
         } catch (StripeException e) {
             logger.error("StripeException while retrieving payment method for paymentMethodId {}:",
@@ -91,7 +88,7 @@ public class WebhookService {
 
     }
 
-    public void handleInvoicePaymentSucceeded(Invoice invoice) {
+    public void handleInvoicePaymentSucceeded(Invoice invoice, InsurancePayment insurancePayment, Transactions transaction) {
         if (invoice == null) {
             logger.error("Invoice is null in invoice.payment_succeeded event");
             return;
@@ -106,23 +103,10 @@ public class WebhookService {
         }
 
         try {
-            Customers userDetail = customerRepository.findByCustomerId(invoice.getCustomer());
+            Customer customer = Customer.retrieve(invoice.getCustomer());
+            UserResponseBaseModel userResponseBaseModel = aspNetUserRepository.findById(customer.getMetadata().get("userId")).orElseThrow(() -> new DataNotFoundException("data not found!"));
 
-            if (userDetail == null) {
-                logger.error("customersId not found: {}", invoice.getCustomer());
-                return;
-            }
-
-            UserResponseBaseModel userResponseBaseModel = aspNetUserRepository.findById(userDetail.getUserId()).orElseThrow(() -> new DataNotFoundException("data not found!"));
-
-            UserAddressesModel userAddressesModel = addressesRepository.findByCreatedBy(userDetail.getUserId());
-
-
-            if (userAddressesModel == null) {
-                logger.error("User address not found for userId: {}", userDetail.getUserId());
-                return;
-            }
-
+            UserAddressesModel userAddressesModel = addressesRepository.findByCreatedBy(customer.getMetadata().get("userId"));
             Subscription subscription = Subscription.retrieve(invoice.getSubscription());
             String paymentMethodId = subscription.getDefaultPaymentMethod();
             String receiptUrl = invoice.getHostedInvoiceUrl();
@@ -141,15 +125,14 @@ public class WebhookService {
 
             Optional<InsurancePayment> insurance =
                     insurancePaymentRepository.findBySubscriptionIdAndUserIdAndWarrantyId(subscription.getId(),
-                            userDetail.getUserId(), warranty.getWarrantyId());
+                            customer.getMetadata().get("userId"), warranty.getWarrantyId());
             if (insurance.isPresent()) {
-                InsurancePayment insurancePayment = insurance.get();
-                insurancePaymentRepository.deleteById(insurancePayment.getId());
+                InsurancePayment insurancePaymentGet = insurance.get();
+                insurancePaymentRepository.deleteById(insurancePaymentGet.getId());
             }
 
-            InsurancePayment insurancePayment = new InsurancePayment();
             insurancePayment.setSubscriptionId(subscription.getId());
-            insurancePayment.setUserId(userDetail.getUserId());
+            insurancePayment.setUserId(customer.getMetadata().get("userId"));
             insurancePayment.setDefault_payment_method(paymentMethodId);
             insurancePayment.setProductId(productId);
             insurancePayment.setEmail(invoice.getCustomerEmail());
@@ -177,11 +160,12 @@ public class WebhookService {
 
             if (paymentMethodId != null) {
                 PaymentMethod paymentMethod = PaymentMethod.retrieve(paymentMethodId);
-                Transactions transaction = new Transactions();
-                transaction.setUserId(userDetail.getUserId());
+                transaction.setUserId(customer.getMetadata().get("userId"));
                 transaction.setProductName(product.getName());
                 transaction.setProductId(productId);
                 transaction.setCustomerId(invoice.getCustomer());
+                transaction.setUserName(invoice.getCustomerName());
+                transaction.setVendor(warranty.getVendor());
                 transaction.setCard(paymentMethod.getCard().getLast4());
                 transaction.setPrice(invoice.getAmountPaid());
                 transaction.setReceiptUrl(receiptUrl);
@@ -196,7 +180,6 @@ public class WebhookService {
                 transactionService.storeHistory(transaction);
             }
 
-
             UserRequest userRequest = new UserRequest();
 
             UserRequest.User user = new UserRequest.User();
@@ -208,15 +191,20 @@ public class WebhookService {
 
             profile.setFirst_name(userResponseBaseModel.getFirstname());
             profile.setLast_name(userResponseBaseModel.getLastname());
-            profile.setAddress(userAddressesModel.getAddressLine1());
-            profile.setCity(userAddressesModel.getCityName());
-            profile.setZip(userAddressesModel.getZipCode());
-            profile.setState(userAddressesModel.getStateName());
+            profile.setAddress(userAddressesModel != null ? userAddressesModel.getAddressLine1() : "");
+            profile.setCity(userAddressesModel != null ? userAddressesModel.getCityName() : "");
+            profile.setZip(userAddressesModel != null ? userAddressesModel.getZipCode() : "");
+            profile.setState(userAddressesModel != null ? userAddressesModel.getStateName() : "");
+
             user.setProfile(profile);
             List<UUID> productPriceIds = Arrays.stream(warranty.getProduct_price_ids().split(","))
                     .map(String::trim)
                     .map(UUID::fromString)
                     .collect(Collectors.toList());
+            if (productPriceIds.isEmpty()) {
+                logger.error("No valid product_price_ids found to send to third party. Input: {}", warranty.getProduct_price_ids());
+                return;
+            }
             user.setProduct_price_ids(productPriceIds);
             userRequest.setUsers(List.of(user));
             logger.info("Sending request payload: {}", userRequest);
@@ -270,16 +258,15 @@ public class WebhookService {
         }
     }
 
-    public void saveCardDetails(PaymentMethod paymentMethod, UserResponseBaseModel userDetail, String customerId) {
+    public void saveCardDetails(PaymentMethod paymentMethod, UserResponseBaseModel userDetail, String customerId, CardDetails cardDetails) {
         logger.info("Requested to save the card details");
         try {
             Optional<CardDetails> findUSerId = cardDetailsRepository.findByUserId(userDetail.getId());
             if (findUSerId.isPresent()) {
-                CardDetails cardDetails = findUSerId.get();
-                Long cardId = cardDetails.getId();
+                CardDetails details = findUSerId.get();
+                Long cardId = details.getId();
                 cardDetailsRepository.deleteById(cardId);
             }
-            CardDetails cardDetails = new CardDetails();
             cardDetails.setPayment_methodId(paymentMethod.getId());
             cardDetails.setCardBrand(paymentMethod.getCard().getBrand());
             cardDetails.setCard_Last4(paymentMethod.getCard().getLast4());

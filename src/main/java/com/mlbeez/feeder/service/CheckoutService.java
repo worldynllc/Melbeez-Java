@@ -2,7 +2,6 @@ package com.mlbeez.feeder.service;
 
 import com.mlbeez.feeder.model.*;
 import com.mlbeez.feeder.repository.AspNetUserRepository;
-import com.mlbeez.feeder.repository.CustomerRepository;
 import com.mlbeez.feeder.repository.InsurancePaymentRepository;
 import com.mlbeez.feeder.repository.WarrantyRepository;
 import com.mlbeez.feeder.service.exception.DataNotFoundException;
@@ -13,7 +12,6 @@ import com.stripe.model.Customer;
 import com.stripe.model.Price;
 import com.stripe.model.Subscription;
 import com.stripe.model.checkout.Session;
-import com.stripe.net.RequestOptions;
 import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.PriceCreateParams;
 import com.stripe.param.checkout.SessionCreateParams;
@@ -45,9 +43,6 @@ public class CheckoutService {
     private WarrantyRepository warrantyRepository;
 
     @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
     private AspNetUserRepository aspNetUserRepository;
 
     @Autowired
@@ -70,9 +65,6 @@ public class CheckoutService {
             Long monthlyPriceLong = (long) (monthlyPrice * 100);
             String subscriptionType = details.get("subscriptionType");
             String paymentType = details.get("paymentType");
-
-
-            String idempotencyKey = userId + "_" + System.currentTimeMillis();
 
             Optional<InsurancePayment> findSubscription =
                     insurancePaymentRepository.findByUserIdAndWarrantyId(userId, warrantyId);
@@ -138,15 +130,10 @@ public class CheckoutService {
                                     .build()
                     )
                     .putMetadata("type", paymentType)
+                    .putMetadata("userId",userId)
                     .build();
 
-            RequestOptions requestOptions = RequestOptions.builder()
-                    .setIdempotencyKey(idempotencyKey)
-                    .setConnectTimeout(60000)
-                    .setReadTimeout(60000)
-                    .build();
-
-            Session session = Session.create(sessionParams, requestOptions);
+            Session session = Session.create(sessionParams);
             responseData.put("url", session.getUrl());
             logger.info("Checkout session successfully created for user {} with session URL: {}", userId, session.getUrl());
             return responseData;
@@ -165,28 +152,11 @@ public class CheckoutService {
 
     @Recover
     public Session recover(ApiConnectionException e) {
-        logger.error("Unable to connect to Stripe after retries: " + e.getMessage(), e);
+        logger.error("Unable to connect to Stripe after retries: {}", e.getMessage(), e);
         throw new RuntimeException("Unable to connect to Stripe after retries: " + e.getMessage());
     }
 
     public String getOrCreateStripeCustomer(String userId) throws StripeException {
-        Optional<Customers> optionalCustomer = customerRepository.findByUserId(userId);
-
-        if (optionalCustomer.isPresent()) {
-            Customers customer = optionalCustomer.get();
-
-            if (customer.getCustomerId() == null || customer.getCustomerId().isEmpty()) {
-                String customerId = createAndSaveStripeCustomer(userId);
-                customer.setCustomerId(customerId);
-                customerRepository.save(customer);
-                return customerId;
-            }
-            return customer.getCustomerId();
-        }
-        return createAndSaveStripeCustomer(userId);
-    }
-
-    private String createAndSaveStripeCustomer(String userId) throws StripeException {
         logger.info("Creating a new Stripe customer for user ID: {}", userId);
 
         UserResponseBaseModel userResponse = aspNetUserRepository.findById(userId)
@@ -198,16 +168,8 @@ public class CheckoutService {
                 .putMetadata("userId", userId)
                 .build();
         Customer stripeCustomer = Customer.create(customerParams);
-
-        Customers customer = new Customers();
-        customer.setUserId(userId);
-        customer.setCustomerId(stripeCustomer.getId());
-        customerRepository.save(customer);
-
         return stripeCustomer.getId();
     }
-
-
     public void deleteSubscription(String subscriptionId) {
         Subscription subscription = null;
         try {

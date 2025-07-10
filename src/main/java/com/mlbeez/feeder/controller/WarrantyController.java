@@ -46,6 +46,7 @@ public class WarrantyController {
         warrantyService.deleteWarrantyById(id);
     }
 
+
     @Operation(summary = "Get all pending warranties")
     @GetMapping("/pending")
     @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN')")
@@ -54,6 +55,8 @@ public class WarrantyController {
         return warrantyService.getPendingWarranties();
     }
 
+
+
     @Operation(summary = "Get all warranties")
     @GetMapping("/all")
     @PreAuthorize("hasAnyRole('ADMIN','USER','SUPERADMIN')")
@@ -61,6 +64,7 @@ public class WarrantyController {
         logger.info("Request to GetAll Warranty");
         return warrantyService.getWarranty();
     }
+
 
     @Operation(summary = "Get a warranty by ID")
     @GetMapping("/{id}")

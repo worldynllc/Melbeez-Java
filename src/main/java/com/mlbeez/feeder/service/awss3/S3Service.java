@@ -75,7 +75,11 @@ public class S3Service implements IMediaStore {
 		WaiterResponse<HeadObjectResponse> waitResponse = waiter.waitUntilObjectExists(waitRequest);
 		AtomicReference<String> url = new AtomicReference<>("");
 		waitResponse.matched().response().ifPresent(x -> {
-			url.set(client.utilities().getUrl(GetUrlRequest.builder().bucket(bucket ).key(key).build()).toExternalForm());
+			url.set(client.utilities().getUrl(
+					GetUrlRequest.builder()
+							.bucket(bucket )
+							.key(key).build()
+			).toExternalForm());
 		});
 		return url.get();
 	}

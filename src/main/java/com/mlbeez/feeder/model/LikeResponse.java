@@ -1,23 +1,24 @@
 package com.mlbeez.feeder.model;
 
 public class LikeResponse {
-    private Feed feed;  // Renamed for clarity
+    public FeedResponse getFeed() {
+        return feed;
+    }
+
+    public void setFeed(FeedResponse feed) {
+        this.feed = feed;
+    }
+
+    private FeedResponse feed;
     private String userId;
     private String userName;
 
-    public LikeResponse(String userName, String userId, Feed feed) {
+    public LikeResponse(String userName, String userId, FeedResponse feed) {
         this.userName = userName;
         this.userId = userId;
         this.feed = feed;
     }
 
-    public Feed getFeed() {
-        return feed;
-    }
-
-    public void setFeed(Feed feed) {
-        this.feed = feed;
-    }
 
     public String getUserId() {
         return userId;

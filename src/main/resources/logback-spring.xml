@@ -9,13 +9,13 @@
         </appender>
         <!-- File appender for general logs -->
         <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
-            <file>logs/spring-boot-application.log</file>
+            <file>logs/app.log</file>
             <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                <fileNamePattern>logs/%d{yyyy-MM-dd}/spring-boot-application.%d{HH}.log</fileNamePattern>
+                <fileNamePattern>logs/%d{yyyy-MM-dd}/app.%d{HH}.log</fileNamePattern>
                 <maxHistory>30</maxHistory>
             </rollingPolicy>
             <encoder>
-                <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
             </encoder>
         </appender>
         <!-- File appender for ERROR logs -->
@@ -25,10 +25,14 @@
                 <fileNamePattern>logs/%d{yyyy-MM-dd}/error.%d{HH}.log</fileNamePattern>
                 <maxHistory>30</maxHistory>
             </rollingPolicy>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>ERROR</level>
+            </filter>
             <encoder>
-                <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
             </encoder>
         </appender>
+
         <!-- Root logger configuration -->
         <root level="INFO">
             <appender-ref ref="console"/>
@@ -64,6 +68,5 @@
         <logger name="ERROR_LOGGER" level="ERROR" additivity="false">
             <appender-ref ref="errorFile"/>
         </logger>
-
     </springProfile>
 </configuration>

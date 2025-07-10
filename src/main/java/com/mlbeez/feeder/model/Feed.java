@@ -40,7 +40,7 @@ public class Feed extends RepresentationModel<Feed>implements Serializable {
 
 
     private String author;
-
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "comment_count")
@@ -61,6 +61,8 @@ public class Feed extends RepresentationModel<Feed>implements Serializable {
     //	private String category;
 //	private String tags;
     private String img;
+
+
 
     @CreationTimestamp
     @Column(name = "created_at",columnDefinition = "TIMESTAMP WITH TIME ZONE")
