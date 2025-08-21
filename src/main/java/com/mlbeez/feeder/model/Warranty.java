@@ -27,10 +27,20 @@ public class Warranty extends RepresentationModel<Warranty> implements Serializa
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private String product_price_ids;
+    private String product_monthly_price_ids;
 
-    public void setProduct_price_ids(String product_price_ids) {
-        this.product_price_ids = product_price_ids;
+    public String getProduct_yearly_price_ids() {
+        return product_yearly_price_ids;
+    }
+
+    public void setProduct_yearly_price_ids(String product_yearly_price_ids) {
+        this.product_yearly_price_ids = product_yearly_price_ids;
+    }
+
+    private String product_yearly_price_ids;
+
+    public void setproduct_monthly_price_ids(String product_monthly_price_ids) {
+        this.product_monthly_price_ids = product_monthly_price_ids;
     }
 
     public void setOther_Details(String other_Details) {

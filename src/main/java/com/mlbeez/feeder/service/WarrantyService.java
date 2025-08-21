@@ -13,6 +13,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.security.access.AccessDeniedException;
@@ -32,6 +33,12 @@ public class WarrantyService {
 
     @Autowired
     private MediaStoreService mediaStoreService;
+
+    @Value("${product.monthly.price}")
+    public String productMonthlyPriceId;
+
+    @Value("${product.yearly.price}")
+    public String productYearlyPriceId;
 
     private static final Logger logger= LoggerFactory.getLogger(WarrantyService.class);
 
@@ -70,6 +77,8 @@ public class WarrantyService {
                 message = "Your file has been uploaded successfully! here " + s;
             }
             warranty.setUpdated_by("");
+            warranty.setproduct_monthly_price_ids(productMonthlyPriceId);
+            warranty.setProduct_yearly_price_ids(productYearlyPriceId);
 
         } catch (Exception ex) {
             logger.error("Error uploading file: " + ex.getMessage(),ex);
@@ -183,7 +192,7 @@ public class WarrantyService {
                         if (request.getPlanName()!=null) existingWarranty.setPlanName(request.getPlanName());
                         if (request.getPlanDescription()!=null) existingWarranty.setPlanDescription(request.getPlanDescription());
                         if (request.getUpdated_by() != null) existingWarranty.setUpdated_by(request.getUpdated_by());
-                        if (request.getProduct_price_ids() != null) existingWarranty.setProduct_price_ids(request.getProduct_price_ids());
+                        if (request.getProduct_monthly_price_ids() != null) existingWarranty.setproduct_monthly_price_ids(request.getProduct_monthly_price_ids());
                         if (request.getOther_Details() != null) existingWarranty.setOther_Details(request.getOther_Details());
                         if (request.getStatus() != null) existingWarranty.setStatus((request.getStatus()));
                         return warrantyRepository.save(existingWarranty);
