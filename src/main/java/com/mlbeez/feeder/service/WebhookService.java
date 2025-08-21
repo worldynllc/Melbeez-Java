@@ -11,10 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -194,18 +191,25 @@ public class WebhookService {
             profile.setAddress(userAddressesModel != null ? userAddressesModel.getAddressLine1() : "");
             profile.setCity(userAddressesModel != null ? userAddressesModel.getCityName() : "");
             profile.setZip(userAddressesModel != null ? userAddressesModel.getZipCode() : "");
-            profile.setState(userAddressesModel != null ? userAddressesModel.getStateName() : "");
 
             user.setProfile(profile);
-            List<UUID> productPriceIds = Arrays.stream(warranty.getProduct_price_ids().split(","))
+            List<UUID> productMonthlyPriceIds = Arrays.stream(warranty.getProduct_monthly_price_ids().split(","))
                     .map(String::trim)
                     .map(UUID::fromString)
                     .collect(Collectors.toList());
-            if (productPriceIds.isEmpty()) {
-                logger.error("No valid product_price_ids found to send to third party. Input: {}", warranty.getProduct_price_ids());
+            List<UUID> productYearlyPriceIds = Arrays.stream(warranty.getProduct_yearly_price_ids().split(","))
+                    .map(String::trim)
+                    .map(UUID::fromString)
+                    .collect(Collectors.toList());
+            if (productMonthlyPriceIds.isEmpty()) {
+                logger.error("No valid product_price_ids found to send to third party. Input: {}", warranty.getProduct_monthly_price_ids());
                 return;
             }
-            user.setProduct_price_ids(productPriceIds);
+            if (productYearlyPriceIds.isEmpty()) {
+                logger.error("No valid product_price_ids found to send to third party. Input: {}", warranty.getProduct_yearly_price_ids());
+                return;
+            }
+            user.setProduct_price_ids(Objects.equals(subscription.getItems().getData().get(0).getPrice().getRecurring().getInterval(), "month") ? productMonthlyPriceIds : productYearlyPriceIds);
             userRequest.setUsers(List.of(user));
             logger.info("Sending request payload: {}", userRequest);
             thirdPartyService.sendUserDetails(userRequest);

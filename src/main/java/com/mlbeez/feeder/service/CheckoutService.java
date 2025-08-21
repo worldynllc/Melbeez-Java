@@ -113,6 +113,7 @@ public class CheckoutService {
                     )
                     .setProduct(productId)
                     .putMetadata("type", paymentType)
+                    .putMetadata("subscription",subscriptionType)
                     .build();
             Price price = Price.create(priceParams);
             logger.info("Stripe price created successfully with ID: {}", price.getId());
