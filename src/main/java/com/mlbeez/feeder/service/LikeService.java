@@ -7,13 +7,13 @@ import com.mlbeez.feeder.model.Like;
 import com.mlbeez.feeder.model.LikeResponse;
 import com.mlbeez.feeder.repository.FeedRepository;
 import com.mlbeez.feeder.repository.LikeRepository;
-import com.mlbeez.feeder.service.exception.DataNotFoundException;
-import com.mlbeez.feeder.service.exception.RateLimitException;
+import com.mlbeez.feeder.service.exception.*;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,19 +23,22 @@ import java.util.stream.Collectors;
 @Service
 public class LikeService {
 
-    @Autowired
-    private LikeRepository likeRepository;
+    private final LikeRepository likeRepository;
 
-    @Autowired
-    private FeedRepository feedRepository;
+    private final FeedRepository feedRepository;
 
-    @Autowired
-    private RateLimiterService rateLimiterService;
+    private final RateLimiterService rateLimiterService;
 
-    @Autowired
-    private LikeLockManager likeLockManager;
+    private final LikeLockManager likeLockManager;
 
     private final Logger logger = LoggerFactory.getLogger(LikeService.class);
+
+    public LikeService(LikeRepository likeRepository, FeedRepository feedRepository, RateLimiterService rateLimiterService, LikeLockManager likeLockManager) {
+        this.likeRepository = likeRepository;
+        this.feedRepository = feedRepository;
+        this.rateLimiterService = rateLimiterService;
+        this.likeLockManager = likeLockManager;
+    }
 
     @Transactional
     public void addLike(Long feedId, String userId, String userName) {
@@ -43,14 +46,17 @@ public class LikeService {
         synchronized (lock) {
             try {
                 if (userId.equals("null") || userId.equals("undefined")) {
-                    throw new DataNotFoundException("");
+                    logger.error("user id is missing!");
+                    throw new UserIdRequiredException("user id is missing!");
                 }
                 if (!rateLimiterService.tryConsume(userId, feedId)) {
                     throw new RateLimitException("Too many requests. Please wait.");
                 }
-
                 Feed feed = feedRepository.findById(feedId)
-                        .orElseThrow(() -> new DataNotFoundException("Feed not found with id: " + feedId));
+                        .orElseThrow(() ->{
+                            logger.error("Feed not found with id: {}",feedId);
+                            return new FeedNotFoundException("Feed not found with id");
+                        });
 
                 Optional<Like> existingLike = likeRepository.findByFeedIdAndUserId(feedId, userId);
 
@@ -59,10 +65,10 @@ public class LikeService {
                 } else {
                     likeFeed(feed, userId, userName);
                 }
-            }
-            catch (RateLimitException e) {
-                logger.warn("Rate limit hit for user {} on feed {}", userId, feedId);
-                throw e;
+            } catch (Exception e) {
+                logger.error("Unexpected error processing like for feed {} by user {}", feedId, userId, e);
+                 ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Internal server error");
             }
             finally {
                 likeLockManager.releaseLock(userId, feedId);
@@ -82,7 +88,7 @@ public class LikeService {
             feedRepository.incrementLikes(feed.getId());
 
         } catch (DataIntegrityViolationException e) {
-            logger.warn("Duplicate like caught at DB level:");
+            logger.error("Duplicate like caught at DB level:");
         }
     }
 
@@ -94,17 +100,33 @@ public class LikeService {
 
             }
         } catch (DataIntegrityViolationException e) {
-            logger.warn("User already liked feed {}", feed.getId());
+            logger.error("User already liked feed {}", feed.getId());
         }
     }
 
-    public List<Like> getAllLikes() {
-        return likeRepository.findAll();
+    public List<LikeResponse> getAllLikes() {
+        try {
+        List<Like> likes = likeRepository.findAll();
+        if(likes.isEmpty()){
+            logger.error("user likes not found!");
+            throw new UserLikesNotFoundException("user likes not found!");
+        }
+        return likes.stream().map(like->{
+        Feed feed = like.getFeed();
+        FeedResponse feedResponse = new FeedResponse(feed.getId(), feed.getUserId());
+        return new LikeResponse(like.getUserName(), like.getUserId(),feedResponse);}).collect(Collectors.toList());
+        }catch (Exception ex){
+            logger.error(ex.getMessage());
+            throw new InternalServerException(ex.getMessage());
+        }
     }
 
     public List<LikeResponse> getLikes(Long feedId) {
         Feed feed = feedRepository.findById(feedId)
-                .orElseThrow(() -> new DataNotFoundException("Feed not found with id: " + feedId));
+                .orElseThrow(() ->{
+                    logger.error("feed not found with id: {}",feedId);
+                    return new FeedNotFoundException("Feed not found with id");
+                });
 
         return likeRepository.findByFeed(feed).stream().map(like -> {
             Feed f = like.getFeed();

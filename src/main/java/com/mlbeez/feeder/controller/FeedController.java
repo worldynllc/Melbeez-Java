@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -20,16 +19,15 @@ import java.util.List;
 @Tag(name = "Feed", description = "Everything about your Feeds")
 public class FeedController {
 
-    @Autowired
-    MediaStoreService service;
+    private final MediaStoreService service;
 
-    @Autowired
-    FeedService feedService;
+    private final FeedService feedService;
 
     public static final Logger logger = LoggerFactory.getLogger(FeedController.class);
 
 
-    public FeedController(FeedService feedService) {
+    public FeedController(MediaStoreService service, FeedService feedService) {
+        this.service = service;
         this.feedService = feedService;
     }
 

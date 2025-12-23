@@ -3,11 +3,10 @@ package com.mlbeez.feeder;
 import com.mlbeez.framework.config.MelbeezContextInitializer;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 
 @SpringBootApplication
-@EnableScheduling
+//@EnableScheduling
 public class RestServiceApplication {
 
 	public static void main(String[] args) {

@@ -7,10 +7,8 @@ import java.util.function.Supplier;
 import com.mlbeez.feeder.controller.FeedController;
 import com.mlbeez.feeder.model.*;
 import com.mlbeez.feeder.repository.*;
-import com.mlbeez.feeder.service.exception.DataNotFoundException;
-import com.mlbeez.feeder.service.exception.IllegalArgumentPassedException;
+import com.mlbeez.feeder.service.exception.*;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,13 +29,8 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class FeedService {
 
-    @Autowired
-    private AspNetUserRoleRepository aspNetUserRoleRepository;
-
-    @Autowired
-    private AspNetRoleRepository aspNetRoleRepository;
-
-
+    private final AspNetUserRoleRepository aspNetUserRoleRepository;
+    private final AspNetRoleRepository aspNetRoleRepository;
     private final MediaStoreService service;
     private final FeedRepository feedRepository;
     private final CommentRepository commentRepository;
@@ -46,7 +39,9 @@ public class FeedService {
 
     private final Supplier<String> uuidGenerator;
 
-    public FeedService(MediaStoreService mediaStoreService, FeedRepository feedRepository, CommentRepository commentRepository, LikeRepository likeRepository, Supplier<String> uuidGenerator) {
+    public FeedService(AspNetUserRoleRepository aspNetUserRoleRepository, AspNetRoleRepository aspNetRoleRepository, MediaStoreService mediaStoreService, FeedRepository feedRepository, CommentRepository commentRepository, LikeRepository likeRepository, Supplier<String> uuidGenerator) {
+        this.aspNetUserRoleRepository = aspNetUserRoleRepository;
+        this.aspNetRoleRepository = aspNetRoleRepository;
         this.service = mediaStoreService;
         this.feedRepository = feedRepository;
         this.commentRepository = commentRepository;
@@ -59,7 +54,7 @@ public class FeedService {
         String fileName = multipart.getOriginalFilename();
         assert fileName != null;
         String[] partStrings = fileName.split("\\.");
-        String file = partStrings[0];
+        String file;
         String extension = (partStrings.length > 1) ? partStrings[1] : "";
         file = generateUniqueFileName() + "." + extension;
         String message = "";
@@ -100,7 +95,7 @@ public class FeedService {
         List<Feed> feeds = feedPage.getContent();
 
         if (CollectionUtils.isEmpty(feeds)) {
-            throw new DataNotFoundException("No feed data in the DataBase");
+            throw new FeedNotFoundException("No feed data in the DataBase");
         }
         for (Feed feed : feeds) {
             Link selfLink =
@@ -126,6 +121,10 @@ public class FeedService {
 
     @Transactional
     public void deleteFeedById(Long id) {
+
+        if(id == null){
+            throw new FeedIdRequiredException("feed id missing!");
+        }
         Optional<Feed> feedOptional = feedRepository.findById(id);
 
         if (feedOptional.isPresent()) {
@@ -143,10 +142,10 @@ public class FeedService {
             String feedAuthorId = feed.getUserId();
 
             Optional<AspNetUserRole> aspNetUserRole = aspNetUserRoleRepository.findByUserId(feedAuthorId);
-            AspNetUserRole getRole = aspNetUserRole.orElseThrow(() -> new DataNotFoundException("Role not found for user"));
+            AspNetUserRole getRole = aspNetUserRole.orElseThrow(() -> new DataNotFoundException("Role not found for user in userRole record"));
 
             Optional<AspNetRole> aspNetRole = aspNetRoleRepository.findById(getRole.getRoleId());
-            AspNetRole getRoleId = aspNetRole.orElseThrow(() -> new DataNotFoundException("Role not found for user"));
+            AspNetRole getRoleId = aspNetRole.orElseThrow(() -> new DataNotFoundException("Role not found in Role record"));
 
             String roleName = getRoleId.getNormalizedName();
 
@@ -156,10 +155,10 @@ public class FeedService {
             } else if (tokenUserRole.equals("ADMIN") && !roleName.equals("ADMIN")) {
                 deleteById(feed);
             } else {
-                throw new AccessDeniedException("You are not authorized to delete this feed");
+                throw new UserAccessDeniedException("You are not authorized to delete this feed");
             }
         } else {
-            throw new DataNotFoundException("Feed not with ID" + id);
+            throw new FeedNotFoundException("Feed not with ID" + id);
         }
     }
 
