@@ -3,20 +3,16 @@ package com.mlbeez.feeder.service;
 import com.mlbeez.feeder.controller.WarrantyController;
 import com.mlbeez.feeder.model.*;
 import com.mlbeez.feeder.repository.WarrantyRepository;
-import com.mlbeez.feeder.service.exception.ConstraintViolationException;
-import com.mlbeez.feeder.service.exception.DataNotFoundException;
-import com.mlbeez.feeder.service.exception.InternalServerException;
+import com.mlbeez.feeder.service.exception.*;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Product;
 import com.stripe.param.ProductCreateParams;
-import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,11 +24,9 @@ import java.util.*;
 @Service
 public class WarrantyService {
 
-    @Autowired
-   private WarrantyRepository warrantyRepository;
 
-    @Autowired
-    private MediaStoreService mediaStoreService;
+    private final MediaStoreService mediaStoreService;
+    private final WarrantyRepository warrantyRepository;
 
     @Value("${product.monthly.price}")
     public String productMonthlyPriceId;
@@ -42,12 +36,17 @@ public class WarrantyService {
 
     private static final Logger logger= LoggerFactory.getLogger(WarrantyService.class);
 
+    public WarrantyService(WarrantyRepository warrantyRepository, MediaStoreService mediaStoreService) {
+        this.warrantyRepository = warrantyRepository;
+        this.mediaStoreService = mediaStoreService;
+    }
+
     public String createWarranty(Warranty warranty, MultipartFile multipart) throws StripeException {
         String fileName = multipart.getOriginalFilename();
         String[] partStrings = fileName.split("\\.");
-        String file = partStrings[0];
+        String file;
         String extension = (partStrings.length > 1) ? partStrings[1] : "";
-        file = UUID.randomUUID().toString() + "." + extension;
+        file = UUID.randomUUID() + "." + extension;
         String message = "";
         String folderName="Admin-Warranty";
         Map<String, String> metadata = new HashMap<>();
@@ -77,16 +76,16 @@ public class WarrantyService {
                 message = "Your file has been uploaded successfully! here " + s;
             }
             warranty.setUpdated_by("");
-            warranty.setproduct_monthly_price_ids(productMonthlyPriceId);
-            warranty.setProduct_yearly_price_ids(productYearlyPriceId);
+            warranty.setProductMonthlyPriceIds(productMonthlyPriceId);
+            warranty.setProductYearlyPriceIds(productYearlyPriceId);
 
         } catch (Exception ex) {
-            logger.error("Error uploading file: " + ex.getMessage(),ex);
+            logger.error("Error uploading file: {}",ex.getMessage(),ex);
             message = "Error uploading file: " + ex.getMessage();
         }
 
         if (warranty.getName() == null || warranty.getPlanDescription() == null) {
-            throw new IllegalArgumentException("Warranty name and plan description must not be null.");
+            throw new WarrantyNameAndPlanNotFoundException("Warranty name and plan description must not be null.");
         }
 
         logger.info("Requested to create the productId for particular warranty in stripe");
@@ -106,14 +105,13 @@ public class WarrantyService {
 
         if(id==null){
             logger.error("Required warranty Id");
+            throw new RequiredWarrantyIdException("Warranty id must!!!");
         }
         try{
-            assert id != null;
-
             Optional<Warranty> optionalWarranty = warrantyRepository.findById(id);
             if (optionalWarranty.isEmpty()) {
                 logger.error("Warranty not found with id: {}", id);
-                throw new EntityNotFoundException("Warranty not found with id: " + id);
+                throw new WarrantyNotFoundException("Warranty not found with id: " + id);
             }
             Warranty warranty = optionalWarranty.get();
 
@@ -134,7 +132,7 @@ public class WarrantyService {
                     logger.info("Warranty deleted successfully");
                 }
                 else {
-                    throw new AccessDeniedException("You are not authorized to delete this warranty");
+                    throw new UserAccessDeniedException("You are not authorized to delete this warranty");
                 }
         }
         catch (InternalServerException e){
@@ -144,8 +142,15 @@ public class WarrantyService {
     }
 
     public void deleteWarranty(Warranty warranty,Long id) {
+        if(id == null){
+            logger.error("warranty id missing!!");
+            throw new RequiredWarrantyIdException("warranty id missing!!");
+        }
         if (warranty.getPicture()!=null && !warranty.getPicture().isEmpty()) {
             mediaStoreService.getMediaStoreService().deleteFile(warranty.getPicture());
+        }else {
+            logger.error("user warranty not found!");
+            throw new WarrantyNotFoundException("user warranty not found!");
         }
         warrantyRepository.deleteById(id);
     }
@@ -155,7 +160,7 @@ public class WarrantyService {
             List<Warranty> warranty = warrantyRepository.findAll();
             if(warranty.isEmpty()){
                 logger.error("Warranty not found");
-                throw new DataNotFoundException("Warranty not found");
+                throw new WarrantyNotFoundException("Warranty not found");
             }
             for (Warranty warranty1 : warranty) {
                 Link selfLink= WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(WarrantyController.class)
@@ -165,9 +170,6 @@ public class WarrantyService {
             }
             return warranty;
         }
-        catch (DataNotFoundException e){
-            throw e;
-        }
         catch (Exception e){
             logger.error("Internal error occurred while retrieving warranty");
             throw new InternalServerException("Internal error occurred while retrieving warranty");
@@ -175,7 +177,11 @@ public class WarrantyService {
     }
 
     public List<Warranty> getPendingWarranties() {
-        return warrantyRepository.findByStatus("Pending");
+        List<Warranty> getPending = warrantyRepository.findByStatus("Pending");
+        if(getPending == null){
+            return new ArrayList<>();
+        }
+            return getPending;
     }
 
     public Optional<Warranty> updateWarranty(Long id, UpdateWarrantyRequest request) {
@@ -192,13 +198,13 @@ public class WarrantyService {
                         if (request.getPlanName()!=null) existingWarranty.setPlanName(request.getPlanName());
                         if (request.getPlanDescription()!=null) existingWarranty.setPlanDescription(request.getPlanDescription());
                         if (request.getUpdated_by() != null) existingWarranty.setUpdated_by(request.getUpdated_by());
-                        if (request.getProduct_monthly_price_ids() != null) existingWarranty.setproduct_monthly_price_ids(request.getProduct_monthly_price_ids());
+                        if (request.getProductMonthlyPriceIds() != null) existingWarranty.setProductMonthlyPriceIds(request.getProductMonthlyPriceIds());
                         if (request.getOther_Details() != null) existingWarranty.setOther_Details(request.getOther_Details());
                         if (request.getStatus() != null) existingWarranty.setStatus((request.getStatus()));
                         return warrantyRepository.save(existingWarranty);
                     })
                     .map(Optional::of)
-                    .orElseThrow(() -> new DataNotFoundException("Warranty not found with id: " + id));
+                    .orElseThrow(() -> new WarrantyNotFoundException("Warranty not found with id: " + id));
         }
        catch (Exception ex){
             logger.error("Database constraint violation",ex);

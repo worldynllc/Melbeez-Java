@@ -6,7 +6,7 @@ import com.mlbeez.feeder.repository.AspNetRoleRepository;
 import com.mlbeez.feeder.repository.AspNetUserRepository;
 import com.mlbeez.feeder.repository.AspNetUserRoleRepository;
 import com.mlbeez.feeder.service.exception.DataNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.mlbeez.feeder.service.exception.UserNotFoundException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -19,14 +19,17 @@ import java.util.List;
 @Service
 public class JwtUserDetailsService implements UserDetailsService {
 
-    @Autowired
-    private AspNetUserRepository aspNetUserRepository;
+    private final AspNetUserRepository aspNetUserRepository;
 
-    @Autowired
-    private AspNetUserRoleRepository aspNetUserRoleRepository;
+    private final AspNetUserRoleRepository aspNetUserRoleRepository;
 
-    @Autowired
-    private AspNetRoleRepository aspNetRoleRepository;
+    private final AspNetRoleRepository aspNetRoleRepository;
+
+    public JwtUserDetailsService(AspNetUserRepository aspNetUserRepository, AspNetUserRoleRepository aspNetUserRoleRepository, AspNetRoleRepository aspNetRoleRepository) {
+        this.aspNetUserRepository = aspNetUserRepository;
+        this.aspNetUserRoleRepository = aspNetUserRoleRepository;
+        this.aspNetRoleRepository = aspNetRoleRepository;
+    }
 
 
     @Override
@@ -34,21 +37,21 @@ public class JwtUserDetailsService implements UserDetailsService {
 
         UserResponseBaseModel userResponseBaseModel = aspNetUserRepository.findByUsername(userName);
         if (userResponseBaseModel == null) {
-            throw new DataNotFoundException("User not found: " + userName);
+            throw new UserNotFoundException("User not found: " + userName);
         }
 
         AspNetUserRole userRole = aspNetUserRoleRepository.findByUserId(userResponseBaseModel.getId())
-                .orElseThrow(() -> new DataNotFoundException("Role not found for user: " + userName));
+                .orElseThrow(() -> new DataNotFoundException("Role not found for user in userRole record: " + userName));
 
         AspNetRole role = aspNetRoleRepository.findById(userRole.getRoleId())
-                .orElseThrow(() -> new DataNotFoundException("Role details not found for user: " + userName));
+                .orElseThrow(() -> new DataNotFoundException("Role details not found for user in Role record: " + userName));
 
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName().toUpperCase()));
 
         String password = (userResponseBaseModel.getPasswordHash() != null && !userResponseBaseModel.getPasswordHash().isEmpty())
                 ? userResponseBaseModel.getPasswordHash()
-                : "DUMMY";
+                : "";
 
         return new User(userResponseBaseModel.getUsername(), password, authorities);
     }

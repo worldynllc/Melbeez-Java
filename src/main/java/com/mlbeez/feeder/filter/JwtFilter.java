@@ -3,13 +3,16 @@ package com.mlbeez.feeder.filter;
 
 import com.mlbeez.feeder.config.jwtconfig.TokenManager;
 import com.mlbeez.feeder.service.JwtUserDetailsService;
+import com.mlbeez.feeder.service.exception.BearerTokenNotFoundException;
+import com.mlbeez.feeder.service.exception.InvalidJwtTokenException;
+import com.mlbeez.feeder.service.exception.JwtExpiryException;
+import com.mlbeez.feeder.service.exception.TokenValidationFailedException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,19 +23,26 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-    @Autowired
-    TokenManager tokenManager;
+    private final TokenManager tokenManager;
 
-    @Autowired
-    JwtUserDetailsService jwtUserDetailsService;
+    private final JwtUserDetailsService jwtUserDetailsService;
 
     private final Logger logger= LoggerFactory.getLogger(JwtFilter.class);
+
+    public JwtFilter(TokenManager tokenManager, JwtUserDetailsService jwtUserDetailsService) {
+        this.tokenManager = tokenManager;
+        this.jwtUserDetailsService = jwtUserDetailsService;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return request.getServletPath().equals("/webhook");
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -40,33 +50,49 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String authorizationHeader = request.getHeader("Authorization");
 
-        String username = null;
-        String jwtToken = null;
-
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            jwtToken = authorizationHeader.substring(7);
-            username = tokenManager.getUsernameFromToken(jwtToken);
-            logger.info("JWT Username extracted: {}", username);
-        }
-
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(username);
-            String role = tokenManager.getRoleFromToken(jwtToken);
-            List<GrantedAuthority> authorities = new ArrayList<>();
-            if (role != null) {
-                authorities.add(new SimpleGrantedAuthority(role));
+        try {
+            if (authorizationHeader == null || authorizationHeader.isEmpty()) {
+                throw new BearerTokenNotFoundException("Bearer token missing in header");
             }
-            if (tokenManager.validateJwtToken(jwtToken, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, authorities);
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            } else {
-                logger.warn("JWT token validation failed for user: {}", username);
+
+            if (!authorizationHeader.startsWith("Bearer ")) {
+                throw new InvalidJwtTokenException("Authorization header must start with Bearer");
             }
+
+            String jwtToken = authorizationHeader.substring(7);
+            String username = tokenManager.getUsernameFromToken(jwtToken);
+
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(username);
+
+                String role = tokenManager.getRoleFromToken(jwtToken);
+                List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
+
+                if (!tokenManager.validateJwtToken(jwtToken, userDetails)) {
+                    throw new TokenValidationFailedException("JWT validation failed");
+                }
+
+                UsernamePasswordAuthenticationToken auth =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            }
+
+            chain.doFilter(request, response);
+
+        } catch (JwtExpiryException | InvalidJwtTokenException | BearerTokenNotFoundException e) {
+            sendError(response, HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+        } catch (Exception e) {
+            sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Authentication error");
         }
-        chain.doFilter(request, response);
     }
 
+    private void sendError(HttpServletResponse response, int status, String message) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.getWriter().write("{ \"error\": \"" + message + "\" }");
+    }
 
 }
