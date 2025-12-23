@@ -1,6 +1,7 @@
 package com.mlbeez.feeder.model;
 
 
+import jakarta.persistence.Column;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,8 +18,10 @@ public class UpdateWarrantyRequest {
     private String annualPrice;
     private Integer discount;
     private String planName;
-    private String product_monthly_price_ids;
-    private String product_yearly_price_ids;
+    @Column(name = "product_monthly_price_ids")
+    private String productMonthlyPriceIds;
+    @Column(name = "product_yearly_price_ids")
+    private String productYearlyPriceIds;
     private String other_Details;
     private String planDescription;
     private String updated_by;

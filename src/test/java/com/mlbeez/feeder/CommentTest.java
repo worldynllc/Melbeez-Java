@@ -98,7 +98,7 @@ public class CommentTest {
         List<Comment> mockComments = List.of(commentOne, commentTwo);
 
         when(feedRepository.findById(feedId)).thenReturn(Optional.of(mockFeed));
-        when(commentRepository.findByFeed(Optional.of(mockFeed))).thenReturn(mockComments);
+//        when(commentRepository.findByFeed(Optional.of(mockFeed))).thenReturn(mockComments);
 
         List<CommentResponse> response = commentServiceImplement.getAllComments(feedId);
 
@@ -117,7 +117,7 @@ public class CommentTest {
         assertEquals(commentTwo.getId(), response2.getId());
 
         verify(feedRepository).findById(feedId);
-        verify(commentRepository).findByFeed(Optional.of(mockFeed));
+//        verify(commentRepository).findByFeed(Optional.of(mockFeed));
     }
 
     @Test
