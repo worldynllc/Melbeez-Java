@@ -13,4 +13,3 @@ public class AppConfig {
         return () -> java.util.UUID.randomUUID().toString();
     }
 }
-

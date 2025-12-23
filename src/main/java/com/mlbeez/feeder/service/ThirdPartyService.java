@@ -48,8 +48,8 @@ public class ThirdPartyService {
                 .retrieve()
                 .bodyToMono(String.class)
                 .subscribe(response ->
-                    logger.info("Response received: {}",response),
-                        error ->logger.error("Error occurred: {}",error.getMessage()),
+                    logger.info("Response received: " + response),
+                        error ->logger.error("Error occurred: " + error.getMessage()),
                         () -> logger.info("Request completed successfully to Akko API")
                 );
     }

@@ -1,7 +1,9 @@
 package com.mlbeez.feeder;
 import com.mlbeez.feeder.model.Comment;
 import com.mlbeez.feeder.model.Feed;
-import com.mlbeez.feeder.repository.*;
+import com.mlbeez.feeder.repository.CommentRepository;
+import com.mlbeez.feeder.repository.FeedRepository;
+import com.mlbeez.feeder.repository.LikeRepository;
 import com.mlbeez.feeder.service.FeedService;
 import com.mlbeez.feeder.service.IMediaStore;
 import com.mlbeez.feeder.service.MediaStoreService;
@@ -48,15 +50,9 @@ public class FeedTest {
     @Mock
     private IMediaStore mediaStore;
 
-    @Mock
-    private AspNetUserRoleRepository aspNetUserRoleRepository;
-
-    @Mock
-    private AspNetRoleRepository aspNetRoleRepository;
-
     @BeforeEach
     void setUp() {
-        feedService = new FeedService(aspNetUserRoleRepository,aspNetRoleRepository, mediaStoreService, feedRepository, commentRepository, likeRepository, uuidGenerator);
+        feedService = new FeedService(mediaStoreService, feedRepository, commentRepository, likeRepository, uuidGenerator);
     }
 
 

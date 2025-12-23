@@ -33,21 +33,15 @@ public class ConfigReader {
 
     private void init() {
         String url = System.getenv("config_path");
-        String apiKey = System.getenv("config_api_key");
-
         if (url == null) {
             url = System.getProperty("config_path");
         }
         if (url == null) {
             throw new RuntimeException("config_path not set");
         }
-        if (apiKey == null) {
-            throw new RuntimeException("config_api_key not set");
-        }
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder()
                 .url(url)
-                .addHeader("X-API-KEY",apiKey)
                 .build();
         try (Response response = client.newCall(request).execute()) {
             assert response.body() != null;

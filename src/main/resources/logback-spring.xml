@@ -3,10 +3,8 @@
     <springProfile name="default">
         <!-- Console appender -->
         <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
-            <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
-                <layout class="com.mlbeez.feeder.utility.PIIMaskingPatternLayout">
+            <encoder>
                 <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
-                </layout>
             </encoder>
         </appender>
         <!-- File appender for general logs -->
@@ -16,10 +14,8 @@
                 <fileNamePattern>logs/%d{yyyy-MM-dd}/app.%d{HH}.log</fileNamePattern>
                 <maxHistory>30</maxHistory>
             </rollingPolicy>
-            <encoder  class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
-                <layout class="com.mlbeez.feeder.utility.PIIMaskingPatternLayout">
+            <encoder>
                 <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
-                </layout>
             </encoder>
         </appender>
         <!-- File appender for ERROR logs -->
@@ -32,10 +28,8 @@
             <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
                 <level>ERROR</level>
             </filter>
-            <encoder  class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
-                <layout class="com.mlbeez.feeder.utility.PIIMaskingPatternLayout">
+            <encoder>
                 <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
-                </layout>
             </encoder>
         </appender>
 
@@ -44,31 +38,31 @@
             <appender-ref ref="console"/>
             <appender-ref ref="file"/>
         </root>
-<!--        &lt;!&ndash; Specific package logger configuration &ndash;&gt;-->
-<!--        <logger name="com.mlbeez.feeder.service" level="ERROR" additivity="false">-->
-<!--            <appender-ref ref="console"/>-->
-<!--            <appender-ref ref="file"/>-->
-<!--        </logger>-->
-<!--        <logger name="com.mlbeez.feeder.errorlogservice.InvoicePaymentFailedService" level="ERROR" additivity="false">-->
-<!--            <appender-ref ref="console"/>-->
-<!--            <appender-ref ref="errorFile"/>-->
-<!--            <appender-ref ref="file"/>-->
-<!--        </logger>-->
-<!--        &lt;!&ndash; Specific logger for ThirdPartyService with INFO level &ndash;&gt;-->
-<!--        <logger name="com.mlbeez.feeder.service.ThirdPartyService" level="INFO" additivity="false">-->
-<!--            <appender-ref ref="console"/>-->
-<!--            <appender-ref ref="file"/>-->
-<!--        </logger>-->
-<!--        <logger name="com.mlbeez.feeder.service.WebhookService" level="INFO" additivity="false">-->
-<!--            <appender-ref ref="console"/>-->
-<!--            <appender-ref ref="file"/>-->
-<!--        </logger>-->
+        <!-- Specific package logger configuration -->
+        <logger name="com.mlbeez.feeder.service" level="ERROR" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="file"/>
+        </logger>
+        <logger name="com.mlbeez.feeder.errorlogservice.InvoicePaymentFailedService" level="ERROR" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="errorFile"/>
+            <appender-ref ref="file"/>
+        </logger>
+        <!-- Specific logger for ThirdPartyService with INFO level -->
+        <logger name="com.mlbeez.feeder.service.ThirdPartyService" level="INFO" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="file"/>
+        </logger>
+        <logger name="com.mlbeez.feeder.service.WebhookService" level="INFO" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="file"/>
+        </logger>
 
-<!--        &lt;!&ndash; Specific package logger for controller &ndash;&gt;-->
-<!--        <logger name="com.mlbeez.feeder.controller" level="INFO" additivity="false">-->
-<!--            <appender-ref ref="console"/>-->
-<!--            <appender-ref ref="file"/>-->
-<!--        </logger>-->
+        <!-- Specific package logger for controller -->
+        <logger name="com.mlbeez.feeder.controller" level="INFO" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="file"/>
+        </logger>
 
         <!-- Separate loggers for ERROR levels -->
         <logger name="ERROR_LOGGER" level="ERROR" additivity="false">

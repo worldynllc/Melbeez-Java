@@ -11,9 +11,9 @@ import java.util.Optional;
 public interface InsurancePaymentRepository extends JpaRepository<InsurancePayment,Long> {
 
 
-    Optional<List<InsurancePayment>>  findByUserId(String userId);
+    List<InsurancePayment>  findByUserId(String userId);
 
-    Optional<InsurancePayment> findByCustomerAndSubscriptionId(String customerId, String subscriptionId);
+    InsurancePayment findByCustomerAndSubscriptionId(String customerId, String subscriptionId);
 
     Optional<InsurancePayment> findByUserIdAndWarrantyId(String userId, String warrantyId);
 

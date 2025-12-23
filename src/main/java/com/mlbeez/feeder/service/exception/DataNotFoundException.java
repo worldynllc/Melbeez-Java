@@ -1,12 +1,14 @@
 package com.mlbeez.feeder.service.exception;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
-public class DataNotFoundException extends ApplicationException {
+@NoArgsConstructor
+public class DataNotFoundException extends RuntimeException {
 
     public DataNotFoundException(String message) {
-        super(message,"DATA_NOT_FOUND");
+        super(message);
     }
 
 }

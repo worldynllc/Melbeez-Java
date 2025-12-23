@@ -5,6 +5,7 @@ import com.mlbeez.feeder.service.FeedService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -17,14 +18,15 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/feed")
 public class FeedMediaController {
 
-    private final FeedService feedService;
+    @Autowired
+    FeedService feedService;
 
     public static final Logger logger= LoggerFactory.getLogger(FeedMediaController.class);
 
-    public FeedMediaController(FeedService feedService) {
-        this.feedService = feedService;
+    @GetMapping("")
+    public String viewHomePage() {
+        return "upload";
     }
-
     @Operation(summary = "Upload a new Feed")
     @PostMapping(value = "/upload", consumes = {"multipart/form-data"})
     @PreAuthorize("hasAnyRole('ADMIN','USER','SUPERADMIN')")

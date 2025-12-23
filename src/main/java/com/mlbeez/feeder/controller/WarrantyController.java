@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -21,17 +22,13 @@ import java.util.Optional;
 @RequestMapping("/warranty")
 @Tag(name = "Warranty", description = "Manage warranties")
 public class WarrantyController {
+    @Autowired
+    private WarrantyService warrantyService;
 
-    private final WarrantyService warrantyService;
-
-    private final WarrantyRepository warrantyRepository;
+    @Autowired
+    private WarrantyRepository warrantyRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(WarrantyController.class);
-
-    public WarrantyController(WarrantyService warrantyService, WarrantyRepository warrantyRepository) {
-        this.warrantyService = warrantyService;
-        this.warrantyRepository = warrantyRepository;
-    }
 
     @Operation(summary = "Upload a new warranty")
     @PostMapping(value = "/upload", consumes = {"multipart/form-data"})

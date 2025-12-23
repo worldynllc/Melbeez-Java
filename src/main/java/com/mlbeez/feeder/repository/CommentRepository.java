@@ -11,7 +11,7 @@ import java.util.Optional;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment,Long> {
 
-    List<Comment> findByFeed(Feed feed);
+    List<Comment> findByFeed(Optional<Feed> feedId);
 
     List<Comment> findAllByFeed(Feed feed);
 

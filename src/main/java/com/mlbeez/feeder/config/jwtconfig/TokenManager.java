@@ -1,8 +1,8 @@
 package com.mlbeez.feeder.config.jwtconfig;
 
-import com.mlbeez.feeder.service.exception.InvalidJwtTokenException;
-import com.mlbeez.feeder.service.exception.JwtExpiryException;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,23 +37,10 @@ public class TokenManager implements Serializable {
                     .getBody();
 
             String username = claims.get("unique_name", String.class);
-            Date expiry = claims.getExpiration();
-            if (username == null || userDetails == null) {
-                throw new InvalidJwtTokenException("Required claims missing in token");
-            }
-            if (expiry != null && expiry.before(new Date())) {
-                throw new JwtExpiryException("JWT token expired");
-            }
-            return username.equals(userDetails.getUsername());
-        } catch (ExpiredJwtException ex) {
-            logger.warn("JWT expired: {}", ex.getMessage());
-            throw new JwtExpiryException("JWT token expired");
-        } catch (UnsupportedJwtException | MalformedJwtException | SignatureException | IllegalArgumentException ex) {
-            logger.warn("Invalid JWT: {}", ex.getMessage());
-            throw new InvalidJwtTokenException("Invalid JWT token");
-        } catch (JwtException ex) {
-            logger.error("JWT processing error: {}", ex.getMessage());
-            throw new InvalidJwtTokenException("JWT processing failed");
+            return username.equals(userDetails.getUsername()) && !claims.getExpiration().before(new Date());
+        } catch (JwtException | IllegalArgumentException e) {
+
+            return false;
         }
     }
 
@@ -65,20 +52,10 @@ public class TokenManager implements Serializable {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            String username = claims.get("unique_name", String.class);
-            if (username == null) {
-                throw new InvalidJwtTokenException("Username claim missing");
-            }
-            return username;
-        }catch (ExpiredJwtException ex) {
-            logger.warn("JWT expired while extracting username: {}", ex.getMessage());
-            throw new JwtExpiryException("JWT token expired");
-        } catch (UnsupportedJwtException | MalformedJwtException | SignatureException | IllegalArgumentException ex) {
-            logger.warn("Invalid JWT while extracting username: {}", ex.getMessage());
-            throw new InvalidJwtTokenException("Invalid JWT token");
-        } catch (JwtException ex) {
-            logger.error("JWT processing error while extracting username: {}", ex.getMessage());
-            throw new InvalidJwtTokenException("JWT processing failed");
+            return claims.get("unique_name", String.class);
+        } catch (Exception e) {
+            logger.error("Errors parsing JWT token: {}", e.getMessage());
+            return null;
         }
     }
 
@@ -89,26 +66,19 @@ public class TokenManager implements Serializable {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            String role = claims.get("role", String.class);
+            String role = claims.get("role", String.class).toUpperCase();
             logger.info("Extracted role from token: {}", role);
-            if (role == null) {
-                throw new InvalidJwtTokenException("Role claim missing");
-            }
-            return "ROLE_" + role.toUpperCase();
-        }catch (ExpiredJwtException ex) {
-            logger.warn("JWT expired while extracting role: {}", ex.getMessage());
-            throw new JwtExpiryException("JWT token expired");
-        } catch (UnsupportedJwtException | MalformedJwtException | SignatureException | IllegalArgumentException ex) {
-            logger.warn("Invalid JWT while extracting role: {}", ex.getMessage());
-            throw new InvalidJwtTokenException("Invalid JWT token");
-        } catch (JwtException ex) {
-            logger.error("JWT processing error while extracting role: {}", ex.getMessage());
-            throw new InvalidJwtTokenException("JWT processing failed");
+            return "ROLE_" + role;
+        } catch (Exception e) {
+            logger.error("Error parsing JWT token: {}", e.getMessage());
+            return null;
         }
     }
+
 
     public Key getKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
+
 }
 

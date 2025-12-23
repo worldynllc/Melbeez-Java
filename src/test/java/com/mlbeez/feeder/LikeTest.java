@@ -62,12 +62,12 @@ public class LikeTest {
 
         when(likeRepository.findAll()).thenReturn(Arrays.asList(likeOne, likeTwo, likeThree));
 
-//        List<Like> allLikes = likeService.getAllLikes();
+        List<Like> allLikes = likeService.getAllLikes();
 
-//        assertNotNull(allLikes);
-//        assertEquals(3, allLikes.size());
-//        assertEquals("John", allLikes.get(0).getUserName());
-//        assertEquals("Mark", allLikes.get(1).getUserName());
-//        assertEquals("Victor", allLikes.get(2).getUserName());
+        assertNotNull(allLikes);
+        assertEquals(3, allLikes.size());
+        assertEquals("John", allLikes.get(0).getUserName());
+        assertEquals("Mark", allLikes.get(1).getUserName());
+        assertEquals("Victor", allLikes.get(2).getUserName());
     }
 }
